@@ -51,8 +51,8 @@ void setLeftMotors(int power)
 
 void setRightMotors(int power)
 {
-	motor[driveRightFront] = (int) (power*0.58);
-	motor[driveRightBack] = (int) (power*0.58);
+	motor[driveRightFront] = power;
+	motor[driveRightBack] = power;
 }
 void setAllDriveMotors(int power)
 {
@@ -125,20 +125,21 @@ void driveStraightEncoders(int dest, int basePower)
 {
 	SensorValue[rightQuad] = 0;
 	SensorValue[leftQuad] = 0;
-	int leftError = numClicks - SensorValue(leftQuad);
-	float leftConst = 0.9;
-	int rightError = numClicks - SensorValue(rightQuad);
-	float rightConst = 0.75;
-	while(fabs(leftError * leftConst) > 0 && fabs(rightError * rightConst) > 0)
+	int leftError = dest - SensorValue(leftQuad);
+	float leftConst = 0.5;
+	int rightError = dest - (-1 * SensorValue(rightQuad));
+	float rightConst = 0.1;
+	while(fabs(leftError * leftConst) > 0 && fabs(rightError * rightConst * 0.58) > 0)
 	{
-		leftError = numClicks - SensorValue(leftQuad);
-		rightError = numClicks - SensorValue(rightQuad);
-		setLeftDrivePower((int)(leftConst * leftError) + 63 *(sgn(numClicks)));
-		setRightDrivePower((int)(rightConst * rightError) + 63 *(sgn(numClicks)));
+		leftError = dest - SensorValue(leftQuad);
+		rightError = dest - (-1 * SensorValue(rightQuad));
+		setLeftMotors((int)(leftConst * leftError));
+		setRightMotors((int)(rightConst * rightError));
 	}
+	writeDebugStreamLine("Did stuff. Are you proud yet?");
 	//clean
-	setRightDrivePower(0);
-	setLeftDrivePower(0);
+	setRightMotors(0);
+	setLeftMotors(0);
 }
 
 void turnToPos(int pos)

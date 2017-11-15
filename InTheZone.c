@@ -182,7 +182,9 @@ task usercontrol()
         {
             //actuallyDriveStraight(2);
             string side = "blue";
-            runBasicCompAuton(side,-1,10);
+            //runBasicCompAuton(side,-1,10);
+            driveStraightEncoders(3000, 127);
+            writeDebugStreamLine("Screw this button");
             //correctStraight(90);
             //driveStraightAuton(500,100,1.25);
         }
@@ -228,7 +230,7 @@ task usercontrol()
         //Drive Motors
         if(fabs(rightJoy) >= 15)
             if(direction==1)
-                setRightMotors(rightJoy);
+                setRightMotors(rightJoy * 0.58);
             else
                 setLeftMotors(rightJoy);
             else
@@ -241,7 +243,7 @@ task usercontrol()
             if(direction==1)
                 setLeftMotors(leftJoy);
             else
-                setRightMotors(leftJoy);
+                setRightMotors(leftJoy * 0.58);
             else
                 if(direction==1)
                     setLeftMotors(0);
