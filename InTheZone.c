@@ -117,13 +117,10 @@ void runBasicCompAuton(string majorSide, int minorSide, int zone)
 
     //Go to mobile goal â Drop mobile base lift, lift cone, and drive straight
     setForkliftPower(1);
-    desired = 3600;
-    kp = 8;
+    desired = 3000;
+    kp = 10;
     startTask(setLiftPosAuton); //lift up cone
-    if(minorSide==1)
-        driveStraightAuton(1600,127); //drive to mobile goal
-    else
-        driveStraightAuton(1700,127); //I'm not sure why this is different... likely this if-loop can be deleted
+    driveStraightAuton(1600,127); //drive to mobile goal
 
     //pick up goal
     reachedMobileGoal = true; //force cone lift to drop
@@ -185,11 +182,8 @@ task usercontrol()
         {
             //actuallyDriveStraight(2);
             string side = "blue";
-            //runBasicCompAuton(side,-1,10);
+            runBasicCompAuton(side,-1,10);
             //correctStraight(90);
-            turnToPos(900);
-            wait1Msec(1000);
-            turnToPos(0);
             //driveStraightAuton(500,100,1.25);
         }
         //testing led

@@ -121,6 +121,26 @@ void driveStraightAuton(int dest, int basePower, float rightMultiplier = 1)
 	setAllDriveMotors(0);
 }
 
+void driveStraightEncoders(int dest, int basePower)
+{
+	SensorValue[rightQuad] = 0;
+	SensorValue[leftQuad] = 0;
+	int leftError = numClicks - SensorValue(leftQuad);
+	float leftConst = 0.9;
+	int rightError = numClicks - SensorValue(rightQuad);
+	float rightConst = 0.75;
+	while(fabs(leftError * leftConst) > 0 && fabs(rightError * rightConst) > 0)
+	{
+		leftError = numClicks - SensorValue(leftQuad);
+		rightError = numClicks - SensorValue(rightQuad);
+		setLeftDrivePower((int)(leftConst * leftError) + 63 *(sgn(numClicks)));
+		setRightDrivePower((int)(rightConst * rightError) + 63 *(sgn(numClicks)));
+	}
+	//clean
+	setRightDrivePower(0);
+	setLeftDrivePower(0);
+}
+
 void turnToPos(int pos)
 {
 	int err = pos - SensorValue[gyro];
