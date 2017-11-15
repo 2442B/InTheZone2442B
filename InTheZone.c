@@ -27,9 +27,6 @@
 
 #pragma competitionControl(Competition)
 
-#define BCI_USE_TIMER
-#define BCI_USE_POS_PID
-
 #include "Vex_Competition_Includes.c"
 #include "\InTheZoneLibrary.c"
 
@@ -45,6 +42,7 @@ int desiredClaw;
 int clawPower;
 bool userControlClaw = true;
 
+//Values increase as lift moves backwards
 enum PotenValues {BACK = 1500, MATCHLOAD = 2000, SCORE = 4095, BACK_CLAW = 3700, MATCHLOAD_CLAW = 850};
 
 bool reachedMobileGoal = false;
@@ -54,11 +52,10 @@ task setLiftPos() //for driver control
     bool ignore = false;
     if(desired == BACK && SensorValue[liftPoten]<BACK)
         ignore = true;
-    clearTimer(T2);
     int err = desired - SensorValue[liftPoten];
     int power = 127;
-    
-    while(abs(err)>200 && time100(T2)<40 && !ignore) //adjust power of motors while error is outide of certain range, then set power to 0
+
+    while(abs(err)>200 &&  !ignore) //adjust power of motors while error is outide of certain range, then set power to 0
     {
         err = desired - SensorValue[liftPoten];
         power = (int) (err*127/4095*kp);
@@ -66,14 +63,14 @@ task setLiftPos() //for driver control
         //writeDebugStreamLine("Poten: %d, Power: %d, Error: %d", SensorValue[liftPoten], power,err);
     }
     setLiftPower(0);
-    
+
 }
 
 task setLiftPosAuton() //for auton: same as above, but holds lift in place and stops if mobile goal has been reached
 {
     int err = desired - SensorValue[liftPoten];
     int power = 127;
-    
+
     while(abs(err)>200 && !reachedMobileGoal) //adjust power of motors while error is outide of certain range, then set power to 0
     {
         err = desired - SensorValue[liftPoten];
@@ -109,70 +106,69 @@ void pre_auton()
     SensorValue[redLED] = 0;
     SensorValue[greenLED] = 1;
     //white line -- -1315
-    
-    
+
+
 }
 void runBasicCompAuton(string majorSide, int minorSide, int zone)
 {
     //minorSide: 1 = left, -1 = right, majorSide parameter not used yet
     clearTimer(T1);
-    reachedMobileGoal = false; //will act as hard stop for lifting cone â€“ when reachedMobileGoal is true, the lift will immediately drop
-    
-    //Go to mobile goal â€“ Drop mobile base lift, lift cone, and drive straight
+    reachedMobileGoal = false; //will act as hard stop for lifting cone â?? when reachedMobileGoal is true, the lift will immediately drop
+
+    //Go to mobile goal â Drop mobile base lift, lift cone, and drive straight
     setForkliftPower(1);
     desired = 3600;
-    kp = 10;
+    kp = 7;
     startTask(setLiftPosAuton); //lift up cone
     if(minorSide==1)
-        driveStraightAuton(1600,127,1); //drive to mobile goal
+        driveStraightAuton(1600,127); //drive to mobile goal
     else
-        driveStraightAuton(1700,127,1); //I'm not sure why this is different... likely this if-loop can be deleted
-    wait1Msec(300);
-    
+        driveStraightAuton(1700,127); //I'm not sure why this is different... likely this if-loop can be deleted
+
     //pick up goal
     reachedMobileGoal = true; //force cone lift to drop
     setForkliftPower(0); //pick up goal
     setLiftPower(0);
     wait1Msec(300);
-    
+
     //drive back
     turnToPos(0);
-    driveStraightAuton(-1000,127,1); //drive back -1000
+    driveStraightAuton(-1000,127); //drive back -1000
     wait1Msec(300);
-    
+
     //Score goal
     if(zone == 5)
     {
         //just turn around and drive straight
-        turnDeg(750); //SHOULD BE REPLACED with turnToPos(-1800)
-        driveStraightAuton(400,127,1);
+        turnToPos(-1800);
+        driveStraightAuton(400,127);
     }
     else if(zone == 10)
     {
         //turn roughly parallel to white line, drive forward a bit, turn fully to face 10 pt zone, then drive straight
         turnToPos(-1315*minorSide);
-        driveStraightAuton(300,127,1);
+        driveStraightAuton(300,127);
         //turnDeg(250);
         turnToPos(-2145*minorSide);
-        driveStraightAuton(600,127,1);
+        driveStraightAuton(600,127);
     }
     wait1Msec(10);
-    
+
     //Score cone and back away
     setClawPower(127);
     desired = BACK;
     kp = 0.9;
-    startTask(setLiftPos);//lift up cone â€“ possibly change this to not go back all the way (potentially wasting time in driver control)
+    startTask(setLiftPos);//lift up cone â?? possibly change this to not go back all the way (potentially wasting time in driver control)
     setForkliftPower(1);
     wait1Msec(500);
     setClawPower(0);
     driveStraightAuton(-600,127,1);
-    writeDebugStreamLine("Time: %d", time100(T1));
+    writeDebugStreamLine("Time: %d", time1(T1));
 }
 
 task autonomous()
 {
-    string majorSide = "blue"
+    string majorSide = "blue";
     int minorSide = 1; //left
     runBasicCompAuton(majorSide,minorSide,10);
     //runProgSkills(side);
@@ -182,7 +178,7 @@ task usercontrol()
 {
     char direction = 1; //controls direction
     bool btnEightRightPressed = false; //tracks if button was pressed
-    
+
     while(true)
     {
         if(vexRT[Btn7L]==1)
@@ -224,14 +220,14 @@ task usercontrol()
         word btnSevenUp = vexRT[Btn7U]; //for lift to match loads
         word btnSevenDown = vexRT[Btn7D]; //for lift to match loads
         word btnEightRight = vexRT[Btn8R]; //for toggling reverse direction
-        
+
         if(btnEightRight == 1 && !btnEightRightPressed){ //if button was pressed and was not already being pressed, change sign
             direction = -direction;
             btnEightRightPressed = true;
         }
         else if(btnEightRight == 0 && btnEightRightPressed) //if button is no longer being pressed, update bool
             btnEightRightPressed = false;
-        
+
         //Drive Motors
         if(fabs(rightJoy) >= 15)
             if(direction==1)
@@ -243,7 +239,7 @@ task usercontrol()
                     setRightMotors(0);
                 else
                     setLeftMotors(0);
-        
+
         if(fabs(leftJoy) >= 15)
             if(direction==1)
                 setLeftMotors(leftJoy);
@@ -254,8 +250,8 @@ task usercontrol()
                     setLeftMotors(0);
                 else
                     setRightMotors(0);
-        
-        
+
+
         //Lift Motors
         if(rightTriggerUp == 1)
         {
@@ -274,7 +270,7 @@ task usercontrol()
             desiredClaw = MATCHLOAD_CLAW;
             clawPower = 80;
             startTask(setClawUntilPos);
-            
+
             desired = MATCHLOAD;
             kp = MATCHLOAD_KP;
             startTask(setLiftPos);
@@ -284,18 +280,18 @@ task usercontrol()
             desiredClaw = BACK_CLAW;
             clawPower = 80;
             startTask(setClawUntilPos);
-            
+
             desired = BACK;
             kp = BACK_KP;
             startTask(setLiftPos);
         }
-        
+
         //Mobile Goal Base Lifters
         if(btnEightUp == 1)
             setForkliftPower(0);
         else if(btnEightDown == 1)
             setForkliftPower(1);
-        
+
         //pincer
         if(userControlClaw){
             if(leftTriggerDown == 1)

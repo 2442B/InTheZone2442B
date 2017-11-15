@@ -102,7 +102,7 @@ void turnDeg(int angle) //TO BE REMOVED AFTER EVERYTHING IS CONVERTED TO TURNTOP
 	setAllDriveMotors(0);
 }
 
-void driveStraightAuton(int dest, int basePower, float rightMultiplier)
+void driveStraightAuton(int dest, int basePower, float rightMultiplier = 1)
 {
 	SensorValue[leftQuad] = 0;
 	int err = dest;
