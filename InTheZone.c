@@ -43,7 +43,7 @@ int clawPower;
 bool userControlClaw = true;
 
 //Values increase as lift moves backwards
-enum PotenValues {BACK = 1500, MATCHLOAD = 2000, SCORE = 4095, BACK_CLAW = 3700, MATCHLOAD_CLAW = 850};
+enum PotenValues {BACK = 1500, MATCHLOAD = 2000, SCORE = 4095, BACK_CLAW = 3700, MATCHLOAD_CLAW = 915};
 
 bool reachedMobileGoal = false;
 
@@ -101,7 +101,7 @@ void pre_auton()
     wait1Msec(1000);
     SensorType[in4] = sensorGyro;
     wait1Msec(2000);
-    SensorScale[in4] = 140;
+    SensorScale[in4] = 137;
     writeDebugStreamLine("finished gyro init %d", SensorScale[in4]);
     SensorValue[redLED] = 0;
     SensorValue[greenLED] = 1;
@@ -118,7 +118,7 @@ void runBasicCompAuton(string majorSide, int minorSide, int zone)
     //Go to mobile goal â Drop mobile base lift, lift cone, and drive straight
     setForkliftPower(1);
     desired = 3600;
-    kp = 7;
+    kp = 8;
     startTask(setLiftPosAuton); //lift up cone
     if(minorSide==1)
         driveStraightAuton(1600,127); //drive to mobile goal
@@ -185,8 +185,11 @@ task usercontrol()
         {
             //actuallyDriveStraight(2);
             string side = "blue";
-            runBasicCompAuton(side,-1,10);
+            //runBasicCompAuton(side,-1,10);
             //correctStraight(90);
+            turnToPos(900);
+            wait1Msec(1000);
+            turnToPos(0);
             //driveStraightAuton(500,100,1.25);
         }
         //testing led
