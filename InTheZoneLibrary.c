@@ -29,16 +29,25 @@ float theta = 0;
 
 task correctStraight() //UNUSED METHOD/FOR TESTING GYRO
 {
-	int adjustedTheta = (int) (theta * 10);
-	int err = adjustedTheta;
+	rightPowerAdjustment = 0;
+	leftPowerAdjustment = 0;
+	int err = theta - SensorValue[gyro];
+	int oldErr = err;
 	int power;
+	int deriv;
+	int totalErr = err;
+	int integral = totalErr;
 	while(1)
 	{
-		err = adjustedTheta - SensorValue[gyro];
-		power = 127*err*0.0027;
+		err = theta - SensorValue[gyro];
+		deriv = (err-oldErr)*0.5; //if error is increasing, apply more power (compensate for less momentum). else, apply more power
+		integral = totalErr * 0.03;
+		power = err*0.5 + deriv + integral;
 		rightPowerAdjustment = power;
 		leftPowerAdjustment = -power;
-		writeDebugStreamLine("Err: %d, Power: %d",err,power);
+		oldErr = err;
+		totalErr += err;
+		writeDebugStreamLine("Err: %d, Deriv: %d, TotalErr: %d, Integral: %d, Power: %d", err,deriv,totalErr,integral,power);
 		wait1Msec(50);
 	}
 }
@@ -102,22 +111,24 @@ void turnDeg(int angle) //TO BE REMOVED AFTER EVERYTHING IS CONVERTED TO TURNTOP
 	setAllDriveMotors(0);
 }
 
-void driveStraightAuton(int dest, int basePower, float rightMultiplier = 1)
+void driveStraightAuton(int dest, int basePower, float rightMultiplier = 0.68)
 {
+	theta = SensorValue[gyro];
 	SensorValue[leftQuad] = 0;
+	SensorValue[rightQuad] = 0;
 	int err = dest;
 	int power = 127;
-	//startTask(correctStraight);
-	while(abs(err)>20)
+	startTask(correctStraight);
+	while(fabs(err)>20 && fabs(dest - SensorValue[rightQuad]>20)
 	{
 		err = dest - SensorValue[leftQuad];
 		power = basePower*sgn(err);
-		setRightMotors((int)(power*rightMultiplier));// + rightPowerAdjustment));
-		setLeftMotors((int) (power));//+leftPowerAdjustment));
+		setRightMotors((int)(power*rightMultiplier + rightPowerAdjustment));
+		setLeftMotors((int) (power+leftPowerAdjustment));
 		//writeDebugStreamLine("RightAdjustment: %d, LeftAdjustment: %d", rightPowerAdjustment, leftPowerAdjustment);
 		//writeDebugStreamLine("err: %d, power: %d, kp: %d, kbias: %d, power?:", err, power, kp, kbias, err*127/dest*kp);
 	}
-	//stopTask(correctStraight);
+	stopTask(correctStraight);
 	setAllDriveMotors(0);
 }
 
@@ -141,6 +152,7 @@ void driveStraightEncoders(int dest, int basePower)
 	setRightMotors(0);
 	setLeftMotors(0);
 }
+
 
 void turnToPos(int pos)
 {

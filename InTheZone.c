@@ -120,7 +120,7 @@ void runBasicCompAuton(string majorSide, int minorSide, int zone)
     desired = 3000;
     kp = 10;
     startTask(setLiftPosAuton); //lift up cone
-    driveStraightAuton(1600,127); //drive to mobile goal
+    driveStraightAuton(1450,127); //drive to mobile goal
 
     //pick up goal
     reachedMobileGoal = true; //force cone lift to drop
@@ -182,11 +182,11 @@ task usercontrol()
         {
             //actuallyDriveStraight(2);
             string side = "blue";
-            //runBasicCompAuton(side,-1,10);
-            driveStraightEncoders(3000, 127);
-            writeDebugStreamLine("Screw this button");
+            runBasicCompAuton(side,-1,10);
+            //driveStraightEncoders(3000, 127);
+            //writeDebugStreamLine("Screw this button");
             //correctStraight(90);
-            //driveStraightAuton(500,100,1.25);
+            //driveStraightAuton(800,127);
         }
         //testing led
         if(SensorValue[liftPoten]<1000)
