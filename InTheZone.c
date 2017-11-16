@@ -35,7 +35,7 @@ int desired;
 float kp;
 float BACK_KP = 1.2;
 float MATCHLOAD_KP = 1.3;
-float SCORE_KP = 0.8;
+float SCORE_KP = 1;
 
 //for setClawUntilPos task
 int desiredClaw;
@@ -120,7 +120,7 @@ void runBasicCompAuton(string majorSide, int minorSide, int zone)
     desired = 3000;
     kp = 10;
     startTask(setLiftPosAuton); //lift up cone
-    driveStraightAuton(1450,127); //drive to mobile goal
+    driveStraightAuton(1550,127); //drive to mobile goal
 
     //pick up goal
     reachedMobileGoal = true; //force cone lift to drop
@@ -130,7 +130,7 @@ void runBasicCompAuton(string majorSide, int minorSide, int zone)
 
     //drive back
     turnToPos(0);
-    driveStraightAuton(-1000,127); //drive back -1000
+    driveStraightAuton(-1200,127); //drive back -1000
     wait1Msec(300);
 
     //Score goal
@@ -147,7 +147,7 @@ void runBasicCompAuton(string majorSide, int minorSide, int zone)
         driveStraightAuton(300,127);
         //turnDeg(250);
         turnToPos(-2145*minorSide);
-        driveStraightAuton(600,127);
+        driveStraightAuton(700,127);
     }
     wait1Msec(10);
 
@@ -186,7 +186,7 @@ task usercontrol()
             //driveStraightEncoders(3000, 127);
             //writeDebugStreamLine("Screw this button");
             //correctStraight(90);
-            //driveStraightAuton(800,127);
+            //driveStraightAuton(-800,127);
         }
         //testing led
         if(SensorValue[liftPoten]<1000)

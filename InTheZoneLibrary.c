@@ -47,7 +47,7 @@ task correctStraight() //UNUSED METHOD/FOR TESTING GYRO
 		leftPowerAdjustment = -power;
 		oldErr = err;
 		totalErr += err;
-		writeDebugStreamLine("Err: %d, Deriv: %d, TotalErr: %d, Integral: %d, Power: %d", err,deriv,totalErr,integral,power);
+		//writeDebugStreamLine("Err: %d, Deriv: %d, TotalErr: %d, Integral: %d, Power: %d", err,deriv,totalErr,integral,power);
 		wait1Msec(50);
 	}
 }
@@ -111,7 +111,7 @@ void turnDeg(int angle) //TO BE REMOVED AFTER EVERYTHING IS CONVERTED TO TURNTOP
 	setAllDriveMotors(0);
 }
 
-void driveStraightAuton(int dest, int basePower, float rightMultiplier = 0.68)
+void driveStraightAuton(int dest, int basePower, float rightMultiplier = 0.6)
 {
 	theta = SensorValue[gyro];
 	SensorValue[leftQuad] = 0;
@@ -119,14 +119,15 @@ void driveStraightAuton(int dest, int basePower, float rightMultiplier = 0.68)
 	int err = dest;
 	int power = 127;
 	startTask(correctStraight);
-	while(fabs(err)>20 && fabs(dest - SensorValue[rightQuad]>20)
+			writeDebugStreamLine("err: %d, power: %d sdfdgdsgfgfsggffs",err,power);
+	while(fabs(err)>20 && fabs(dest - (-1*SensorValue[rightQuad]))>20)
 	{
 		err = dest - SensorValue[leftQuad];
 		power = basePower*sgn(err);
 		setRightMotors((int)(power*rightMultiplier + rightPowerAdjustment));
 		setLeftMotors((int) (power+leftPowerAdjustment));
 		//writeDebugStreamLine("RightAdjustment: %d, LeftAdjustment: %d", rightPowerAdjustment, leftPowerAdjustment);
-		//writeDebugStreamLine("err: %d, power: %d, kp: %d, kbias: %d, power?:", err, power, kp, kbias, err*127/dest*kp);
+		//writeDebugStreamLine("err: %d, power: %d, rpower: %d",err,power,(int)(power*rightMultiplier + rightPowerAdjustment));
 	}
 	stopTask(correctStraight);
 	setAllDriveMotors(0);
@@ -164,7 +165,6 @@ void turnToPos(int pos)
 		power = 127*err*0.004+10;
 		setRightMotors(power);
 		setLeftMotors(-power);
-		writeDebugStreamLine("Err: %d, Power: %d",err,power);
 		wait1Msec(50);
 	}
 }
