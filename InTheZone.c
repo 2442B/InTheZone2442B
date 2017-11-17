@@ -144,10 +144,10 @@ void runBasicCompAuton(string majorSide, int minorSide, int zone)
     {
         //turn roughly parallel to white line, drive forward a bit, turn fully to face 10 pt zone, then drive straight
         turnToPos(-1315*minorSide);
-        driveStraightAuton(300,127);
+        driveStraightAuton(400,127);
         //turnDeg(250);
-        turnToPos(-2145*minorSide);
-        driveStraightAuton(700,127);
+        turnToPos(-2245*minorSide);
+        driveStraightAuton(750,127);
     }
     wait1Msec(10);
 
@@ -159,7 +159,7 @@ void runBasicCompAuton(string majorSide, int minorSide, int zone)
     setForkliftPower(1);
     wait1Msec(500);
     setClawPower(0);
-    driveStraightAuton(-600,127,1);
+    driveStraightAuton(-800,127,1);
     writeDebugStreamLine("Time: %d", time1(T1));
 }
 

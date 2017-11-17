@@ -157,9 +157,10 @@ void driveStraightEncoders(int dest, int basePower)
 
 void turnToPos(int pos)
 {
+	clearTimer(T4);
 	int err = pos - SensorValue[gyro];
 	int power;
-	while(fabs(err) > 50)
+	while(fabs(err) > 80 && time1(T4)<2500)
 	{
 		err = pos - SensorValue[gyro];
 		power = 127*err*0.004+10;
