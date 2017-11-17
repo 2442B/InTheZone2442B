@@ -89,29 +89,7 @@ void setClawPower(int power)
 
 }
 
-void turnDeg(int angle) //TO BE REMOVED AFTER EVERYTHING IS CONVERTED TO TURNTOPOS()
-{
-	SensorValue[rightQuad] = 0;
-	SensorValue[leftQuad] = 0;
-	int adjustedAngle = angle*385/360;
-	int err = adjustedAngle;
-	int power;
-	while(abs(err)>20)
-	{
-		err = adjustedAngle - SensorValue[leftQuad];
-		power=-127;
-		writeDebugStreamLine("err: %d",err);
-		//power = err*127/ajustedAngle + 10;
-		setRightMotors(power);
-		setLeftMotors(-power);
-	}
-	setRightMotors(sgn(angle) * -63);
-	setLeftMotors(sgn(angle) * 63);
-	wait10Msec(3);
-	setAllDriveMotors(0);
-}
-
-void driveStraightAuton(int dest, int basePower, float rightMultiplier = 0.6)
+void driveStraightAuton(int dest, int basePower, float rightMultiplier = 0.58)
 {
 	theta = SensorValue[gyro];
 	SensorValue[leftQuad] = 0;
@@ -133,26 +111,26 @@ void driveStraightAuton(int dest, int basePower, float rightMultiplier = 0.6)
 	setAllDriveMotors(0);
 }
 
-void driveStraightEncoders(int dest, int basePower)
-{
-	SensorValue[rightQuad] = 0;
-	SensorValue[leftQuad] = 0;
-	int leftError = dest - SensorValue(leftQuad);
-	float leftConst = 0.5;
-	int rightError = dest - (-1 * SensorValue(rightQuad));
-	float rightConst = 0.1;
-	while(fabs(leftError * leftConst) > 0 && fabs(rightError * rightConst * 0.58) > 0)
-	{
-		leftError = dest - SensorValue(leftQuad);
-		rightError = dest - (-1 * SensorValue(rightQuad));
-		setLeftMotors((int)(leftConst * leftError));
-		setRightMotors((int)(rightConst * rightError));
-	}
-	writeDebugStreamLine("Did stuff. Are you proud yet?");
-	//clean
-	setRightMotors(0);
-	setLeftMotors(0);
-}
+//void driveStraightEncoders(int dest, int basePower)
+//{
+//	SensorValue[rightQuad] = 0;
+//	SensorValue[leftQuad] = 0;
+//	int leftError = dest - SensorValue(leftQuad);
+//	float leftConst = 0.5;
+//	int rightError = dest - (-1 * SensorValue(rightQuad));
+//	float rightConst = 0.1;
+//	while(fabs(leftError * leftConst) > 0 && fabs(rightError * rightConst * 0.58) > 0)
+//	{
+//		leftError = dest - SensorValue(leftQuad);
+//		rightError = dest - (-1 * SensorValue(rightQuad));
+//		setLeftMotors((int)(leftConst * leftError));
+//		setRightMotors((int)(rightConst * rightError));
+//	}
+//	writeDebugStreamLine("Did stuff. Are you proud yet?");
+//	//clean
+//	setRightMotors(0);
+//	setLeftMotors(0);
+//}
 
 
 void turnToPos(int pos)
