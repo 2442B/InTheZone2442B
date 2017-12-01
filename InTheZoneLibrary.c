@@ -13,8 +13,8 @@
 #pragma config(Motor,  port2,           test,          tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port3,           driveLeftFront, tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port4,           driveLeftBack, tmotorVex393_MC29, openLoop, reversed)
-#pragma config(Motor,  port5,           driveRightFront, tmotorVex393_MC29, openLoop)
-#pragma config(Motor,  port6,           driveRightBack, tmotorVex393_MC29, openLoop, reversed)
+#pragma config(Motor,  port5,           driveRightFront, tmotorVex393_MC29, openLoop, reversed)
+#pragma config(Motor,  port6,           driveRightBack, tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port7,           liftLeft,      tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port8,           liftRight,     tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port9,           forklift,      tmotorVex393_MC29, openLoop)
@@ -23,35 +23,30 @@
 
 #pragma systemFile
 
+////GLOBAL VARIABLES////
+//Poten Values For Lift -- Values increase as lift moves backwards
+enum PotenValues {BACK = 1000, MATCHLOAD = 1300, SCORE = 4095, BACK_CLAW = 3700, MATCHLOAD_CLAW = 750};
+float BACK_KP = 1.7;
+float MATCHLOAD_KP = 2;
+float SCORE_KP = 1;
+
+//for correctStraight task / driveStraight method
 float rightPowerAdjustment = 0;
 float leftPowerAdjustment = 0;
 float theta = 0;
 
-task correctStraight() //UNUSED METHOD/FOR TESTING GYRO
-{
-	rightPowerAdjustment = 0;
-	leftPowerAdjustment = 0;
-	int err = theta - SensorValue[gyro];
-	int oldErr = err;
-	int power;
-	int deriv;
-	int totalErr = err;
-	int integral = totalErr;
-	while(1)
-	{
-		err = theta - SensorValue[gyro];
-		deriv = (err-oldErr)*0.5; //if error is increasing, apply more power (compensate for less momentum). else, apply more power
-		integral = totalErr * 0.03;
-		power = err*0.5 + deriv + integral;
-		rightPowerAdjustment = power;
-		leftPowerAdjustment = -power;
-		oldErr = err;
-		totalErr += err;
-		//writeDebugStreamLine("Err: %d, Deriv: %d, TotalErr: %d, Integral: %d, Power: %d", err,deriv,totalErr,integral,power);
-		wait1Msec(50);
-	}
-}
+//for setLiftPos task / setLiftPos method
+int desired;
+int powAfter;
+float kp;
+bool reachedMobileGoal = false;
 
+//for setClawUntilPos task / setClawUntilPos
+int desiredClaw;
+int clawPower;
+bool userControlClaw = true;
+
+/////BASIC DRIVE METHODS/////
 void setLeftMotors(int power)
 {
 	motor[driveLeftFront] = power;
@@ -77,7 +72,6 @@ void setLiftPower(int power)
 
 void setForkliftPower(int power)
 {
-	//motor[forklift] = power;
 	SensorValue[rightPiston] = power;
 	SensorValue[leftPiston]  = power;
 }
@@ -89,7 +83,65 @@ void setClawPower(int power)
 
 }
 
-void driveStraightAuton(int dest, int basePower, float rightMultiplier = 0.58)
+/////////TASKS/////////
+task correctStraight()
+{
+	rightPowerAdjustment = 0;
+	leftPowerAdjustment = 0;
+	int err = theta - SensorValue[gyro];
+	int oldErr = err;
+	int power;
+	int deriv;
+	int totalErr = err;
+	int integral = totalErr;
+	while(1)
+	{
+		err = theta - SensorValue[gyro];
+		deriv = (err-oldErr)*0.5; //if error is increasing, apply more power (compensate for less momentum). else, apply more power
+		integral = totalErr * 0.03;
+		power = err*0.5 + deriv + integral;
+		rightPowerAdjustment = power;
+		leftPowerAdjustment = -power;
+		oldErr = err;
+		totalErr += err;
+		//writeDebugStreamLine("Err: %d, Deriv: %d, TotalErr: %d, Integral: %d, Power: %d", err,deriv,totalErr,integral,power);
+		wait1Msec(50);
+	}
+}
+
+task setLiftPosTask() //reachedMobileGoal is only used in auton to stop and hold lift in place if robot reaches goal unexpectedly early
+{
+	bool ignore = false;
+	if((desired == BACK && SensorValue[liftPoten]<BACK) || reachedMobileGoal) //1000 = BACK value
+		ignore = true;
+	int err = desired - SensorValue[liftPoten];
+	int power = 127;
+
+	while(abs(err)>200 &&  !ignore) //adjust power of motors while error is outide of certain range, then set power to 0
+	{
+		err = desired - SensorValue[liftPoten];
+		power = (int) (err*127/4095*kp);
+		setLiftPower(power);
+		//writeDebugStreamLine("Poten: %d, Power: %d, Error: %d", SensorValue[liftPoten], power,err);
+	}
+	setLiftPower(powAfter);
+	if(reachedMobileGoal)
+		setLiftPower(0);
+}
+
+task setClawUntilPosTask()
+{
+	userControlClaw = false;
+	setClawPower(clawPower);
+	while(SensorValue[liftPoten]>desiredClaw){} //wait until lift goes past a certain point moving from score to back
+	setClawPower(-clawPower);
+	wait1Msec(10);
+	setClawPower(0);
+	userControlClaw = true;
+}
+
+///////COMPLEX METHODS///////
+void driveStraight(int dest, int basePower, float rightMultiplier = 0.58) //uses correctStraight task (with gyro) to dive straight
 {
 	theta = SensorValue[gyro];
 	SensorValue[leftQuad] = 0;
@@ -111,28 +163,6 @@ void driveStraightAuton(int dest, int basePower, float rightMultiplier = 0.58)
 	setAllDriveMotors(0);
 }
 
-//void driveStraightEncoders(int dest, int basePower)
-//{
-//	SensorValue[rightQuad] = 0;
-//	SensorValue[leftQuad] = 0;
-//	int leftError = dest - SensorValue(leftQuad);
-//	float leftConst = 0.5;
-//	int rightError = dest - (-1 * SensorValue(rightQuad));
-//	float rightConst = 0.1;
-//	while(fabs(leftError * leftConst) > 0 && fabs(rightError * rightConst * 0.58) > 0)
-//	{
-//		leftError = dest - SensorValue(leftQuad);
-//		rightError = dest - (-1 * SensorValue(rightQuad));
-//		setLeftMotors((int)(leftConst * leftError));
-//		setRightMotors((int)(rightConst * rightError));
-//	}
-//	writeDebugStreamLine("Did stuff. Are you proud yet?");
-//	//clean
-//	setRightMotors(0);
-//	setLeftMotors(0);
-//}
-
-
 void turnToPos(int pos)
 {
 	clearTimer(T4);
@@ -147,30 +177,19 @@ void turnToPos(int pos)
 		wait1Msec(50);
 	}
 }
-//void actuallyDriveStraight(int time)
-//{
-//	clearTimer(T1);
-//	SensorValue[rightQuad] = 0;
-//	SensorValue[leftQuad]= 0;
-//	int masterPower = -100;
-//	int adjustedPower =masterPower*1.17;
-//	setRightMotors(adjustedPower);
-//	setLeftMotors(masterPower);
-//	int err;
-//	int left;
-//	int right;
-//	while(time100(T1)<time*10)
-//	{
-//		int left = SensorValue[leftQuad];
-//		right = - SensorValue[rightQuad];
-//		err = left - right;
-//		adjustedPower += 0.4*err;
-//		writeDebugStreamLine("Left Speed: %d, Right Speed: %d, Error: %d, AdjustedPower: %d",left,right,err,adjustedPower);
-//		setRightMotors(adjustedPower);
 
-//		SensorValue[rightQuad] = 0;
-//		SensorValue[leftQuad] = 0;
+void setLiftPos(int aDesired, float aKp, int aPowAfter = 0)
+{
+	reachedMobileGoal = false;
+	desired = aDesired;
+	kp = aKp;
+	powAfter = aPowAfter;
+	startTask(setLiftPosTask);
+}
 
-//		wait1Msec(50);
-//	}
-//}
+void setClawUntilPos(int aDesiredClaw, int aClawPower)
+{
+	desiredClaw = aDesiredClaw;
+	clawPower = aClawPower;
+	startTask(setClawUntilPosTask);
+}

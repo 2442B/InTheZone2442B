@@ -13,8 +13,8 @@
 #pragma config(Motor,  port2,           test,          tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port3,           driveLeftFront, tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port4,           driveLeftBack, tmotorVex393_MC29, openLoop, reversed)
-#pragma config(Motor,  port5,           driveRightFront, tmotorVex393_MC29, openLoop)
-#pragma config(Motor,  port6,           driveRightBack, tmotorVex393_MC29, openLoop, reversed)
+#pragma config(Motor,  port5,           driveRightFront, tmotorVex393_MC29, openLoop, reversed)
+#pragma config(Motor,  port6,           driveRightBack, tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port7,           liftLeft,      tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port8,           liftRight,     tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port9,           forklift,      tmotorVex393_MC29, openLoop)
@@ -29,69 +29,6 @@
 
 #include "Vex_Competition_Includes.c"
 #include "\InTheZoneLibrary.c"
-
-//for setLiftPos task
-int desired;
-float kp;
-float BACK_KP = 1.7;
-float MATCHLOAD_KP = 2;
-float SCORE_KP = 1;
-
-//for setClawUntilPos task
-int desiredClaw;
-int clawPower;
-bool userControlClaw = true;
-
-//Values increase as lift moves backwards
-enum PotenValues {BACK = 1000, MATCHLOAD = 1300, SCORE = 4095, BACK_CLAW = 3700, MATCHLOAD_CLAW = 750};
-
-bool reachedMobileGoal = false;
-
-task setLiftPos() //for driver control
-{
-	bool ignore = false;
-	if(desired == BACK && SensorValue[liftPoten]<BACK)
-		ignore = true;
-	int err = desired - SensorValue[liftPoten];
-	int power = 127;
-
-	while(abs(err)>200 &&  !ignore) //adjust power of motors while error is outide of certain range, then set power to 0
-	{
-		err = desired - SensorValue[liftPoten];
-		power = (int) (err*127/4095*kp);
-		setLiftPower(power);
-		//writeDebugStreamLine("Poten: %d, Power: %d, Error: %d", SensorValue[liftPoten], power,err);
-	}
-	setLiftPower(0);
-
-}
-
-task setLiftPosAuton() //for auton: same as above, but holds lift in place and stops if mobile goal has been reached
-{
-	int err = desired - SensorValue[liftPoten];
-	int power = 127;
-
-	while(abs(err)>200 && !reachedMobileGoal) //adjust power of motors while error is outide of certain range, then set power to 0
-	{
-		err = desired - SensorValue[liftPoten];
-		power = (int) (err*127/4095*kp);
-		setLiftPower(power);
-	}
-	setLiftPower(-15);
-	if(reachedMobileGoal)
-		setLiftPower(0);
-}
-
-task setClawUntilPos()
-{
-	userControlClaw = false;
-	setClawPower(clawPower);
-	while(SensorValue[liftPoten]>desiredClaw){} //wait until lift goes past a certain point moving from score to back
-	setClawPower(-clawPower);
-	wait1Msec(10);
-	setClawPower(0);
-	userControlClaw = true;
-}
 
 void pre_auton()
 {
@@ -117,10 +54,8 @@ void runBasicCompAuton(string majorSide, int minorSide, int zone)
 
 	//Go to mobile goal â Drop mobile base lift, lift cone, and drive straight
 	setForkliftPower(1);
-	desired = 3000;
-	kp = 10;
-	startTask(setLiftPosAuton); //lift up cone
-	driveStraightAuton(1550,127); //drive to mobile goal
+	setLiftPos(3500,7,-15);
+	driveStraight(1550,127); //drive to mobile goal
 
 	//pick up goal
 	reachedMobileGoal = true; //force cone lift to drop
@@ -130,120 +65,43 @@ void runBasicCompAuton(string majorSide, int minorSide, int zone)
 
 	//drive back
 	turnToPos(0);
-	driveStraightAuton(-1200,127); //drive back -1000
+	driveStraight(-1200,127); //drive back -1000
 	wait1Msec(300);
 
 	//Score goal
 	if(zone == 5)
 	{
 		//just turn around and drive straight
-		turnToPos(-1800);
-		driveStraightAuton(400,127);
+		turnToPos(-1800*minorSide);
+		driveStraight(400,127);
 	}
 	else if(zone == 10)
 	{
 		//turn roughly parallel to white line, drive forward a bit, turn fully to face 10 pt zone, then drive straight
 		turnToPos(-1315*minorSide);
-		driveStraightAuton(400,127);
+		driveStraight(400,127);
 		//turnDeg(250);
 		turnToPos(-2245*minorSide);
-		driveStraightAuton(750,127);
+		driveStraight(750,127);
 	}
 	wait1Msec(10);
 
 	//Score cone and back away
 	setClawPower(127);
-	desired = BACK;
-	kp = 0.9;
-	startTask(setLiftPos);//lift up cone â?? possibly change this to not go back all the way (potentially wasting time in driver control)
+	setLiftPos(BACK,0.9); //lift up cone â?? possibly change this to not go back all the way (potentially wasting time in driver control)
 	setForkliftPower(1);
 	wait1Msec(500);
 	setClawPower(0);
-	driveStraightAuton(-800,127,1);
+	driveStraight(-800,127,1);
 	writeDebugStreamLine("Time: %d", time1(T1));
 }
-//void runProgSkills() //right side + blue (near match load station)
-//{
-//	clearTimer(T1);
-//	int minorSide = -1;
-//	reachedMobileGoal = false; //will act as hard stop for lifting cone â?? when reachedMobileGoal is true, the lift will immediately drop
-
-//	//Go to mobile goal â Drop mobile base lift, lift cone, and drive straight
-//	setForkliftPower(1);
-//	desired = 3000;
-//	kp = 10;
-//	startTask(setLiftPosAuton); //lift up cone
-//	driveStraightAuton(1550,127); //drive to mobile goal
-
-//	//pick up goal
-//	reachedMobileGoal = true; //force cone lift to drop
-//	setForkliftPower(0); //pick up goal
-//	setLiftPower(0);
-//	wait1Msec(300);
-
-//	//drive back
-//	turnToPos(0);
-//	driveStraightAuton(-950,127); //drive back -1000
-//	wait1Msec(300);
-
-//	turnToPos(-1500*minorSide);
-
-//	desiredClaw = MATCHLOAD_CLAW;
-//	clawPower = 80;
-//	startTask(setClawUntilPos);
-//	desired = MATCHLOAD;
-//	kp = MATCHLOAD_KP;
-//	startTask(setLiftPos);
-
-//	driveStraightAuton(100,127);
-//		writeDebugStreamLine("liftPoten: %d",SensorValue[liftPoten])
-//		wait1Msec(2000);
-//	//while(SensorValue[liftPoten]>0){	writeDebugStreamLine("liftPoten: %d",SensorValue[liftPoten]);}
-//	writeDebugStreamLine("liftPoten: %d",SensorValue[liftPoten]);
-//	desired = SCORE;
-//	kp = SCORE_KP;
-//	startTask(setLiftPos);
-
-//	//for(int i = 0; i < 1; i++)
-//	//{
-//	//	desiredClaw = MATCHLOAD_CLAW;
-//	//	clawPower = 80;
-//	//	startTask(setClawUntilPos);
-//	//	desired = MATCHLOAD;
-//	//	kp = MATCHLOAD_KP;
-//	//	startTask(setLiftPos);
-//	//	while(SensorValue[liftPoten]>MATCHLOAD_CLAW){}
-//	//	desired = SCORE;
-//	//	kp = SCORE_KP;
-//	//	startTask(setLiftPos);
-//	//	while(SensorValue[liftPoten]<SCORE){};
-//	//}
-
-//	driveStraightAuton(500,127);
-//	turnToPos(-2245*minorSide);
-
-//	driveStraightAuton(750,127);
-
-//	wait1Msec(10);
-
-//	//Score cone and back away
-//	setClawPower(127);
-//	desired = BACK;
-//	kp = 0.9;
-//	startTask(setLiftPos);//lift up cone â?? possibly change this to not go back all the way (potentially wasting time in driver control)
-//	setForkliftPower(1);
-//	wait1Msec(500);
-//	setClawPower(0);
-//	driveStraightAuton(-800,127,1);
-//	writeDebugStreamLine("Time: %d", time1(T1));
-//}
-
 
 task autonomous()
 {
 	string majorSide = "blue";
-	int minorSide = 1; //left
-	runBasicCompAuton(majorSide,minorSide,10);
+	int minorSide = 1; //1 = left, -1 = right
+	int zone = 10; //choose 5 or 10
+	runBasicCompAuton(majorSide,minorSide,zone);
 	//runProgSkills(side);
 }
 
@@ -311,35 +169,27 @@ task usercontrol()
 		//Lift Motors
 		if(rightTriggerUp == 1)
 		{
-			desired = SCORE;
-			kp = SCORE_KP;
-			startTask(setLiftPos);
+			setLiftPower(127);
+			//setLiftPos(SCORE,SCORE_KP);
 		}
 		else if(rightTriggerDown == 1)
 		{
-			desired = BACK;
-			kp = BACK_KP;
-			startTask(setLiftPos);
+			setLiftPower(-127);
+			//setLiftPos(BACK,BACK_KP);
 		}
 		else if(btnSevenUp == 1)
 		{
-			desiredClaw = MATCHLOAD_CLAW;
-			clawPower = 80;
-			startTask(setClawUntilPos);
-
-			desired = MATCHLOAD;
-			kp = MATCHLOAD_KP;
-			startTask(setLiftPos);
+			setClawUntilPos(MATCHLOAD_CLAW,80);
+			setLiftPos(MATCHLOAD,MATCHLOAD_KP);
 		}
 		else if(btnSevenDown == 1)
 		{
-			desiredClaw = BACK_CLAW;
-			clawPower = 80;
-			startTask(setClawUntilPos);
-
-			desired = BACK;
-			kp = BACK_KP;
-			startTask(setLiftPos);
+			setClawUntilPos(BACK_CLAW,80);
+			setLiftPos(BACK,BACK_KP);
+		}
+		else
+		{
+			setLiftPower(0);
 		}
 
 		//Mobile Goal Base Lifters
@@ -351,17 +201,11 @@ task usercontrol()
 		//pincer
 		if(userControlClaw){
 			if(leftTriggerDown == 1)
-			{
 				setClawPower(80);
-			}
 			else if(leftTriggerUp == 1)
-			{
 				setClawPower(-80);
-			}
 			else
-			{
 				setClawPower(0);
-			}
 		}
 	}
 }
