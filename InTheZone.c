@@ -11,8 +11,8 @@
 #pragma config(Sensor, dgtl12, rightPiston,    sensorDigitalOut)
 #pragma config(Motor,  port1,           claw2,         tmotorVex393_HBridge, openLoop, reversed)
 #pragma config(Motor,  port2,           test,          tmotorVex393_MC29, openLoop)
-#pragma config(Motor,  port3,           driveLeftFront, tmotorVex393_MC29, openLoop)
-#pragma config(Motor,  port4,           driveLeftBack, tmotorVex393_MC29, openLoop, reversed)
+#pragma config(Motor,  port3,           driveLeftFront, tmotorVex393_MC29, openLoop, reversed)
+#pragma config(Motor,  port4,           driveLeftBack, tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port5,           driveRightFront, tmotorVex393_MC29, openLoop, reversed)
 #pragma config(Motor,  port6,           driveRightBack, tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port7,           liftLeft,      tmotorVex393_MC29, openLoop)
@@ -145,7 +145,7 @@ task usercontrol()
 		//Drive Motors
 		if(fabs(rightJoy) >= 15)
 			if(direction==1)
-			setRightMotors(rightJoy * 0.58);
+			setRightMotors(rightJoy);
 		else
 			setLeftMotors(rightJoy);
 		else
@@ -158,7 +158,7 @@ task usercontrol()
 			if(direction==1)
 			setLeftMotors(leftJoy);
 		else
-			setRightMotors(leftJoy * 0.58);
+			setRightMotors(leftJoy);
 		else
 			if(direction==1)
 			setLeftMotors(0);
@@ -174,7 +174,7 @@ task usercontrol()
 		}
 		else if(rightTriggerDown == 1)
 		{
-			setLiftPower(-127);
+			setLiftPower(-80);
 			//setLiftPos(BACK,BACK_KP);
 		}
 		else if(btnSevenUp == 1)
