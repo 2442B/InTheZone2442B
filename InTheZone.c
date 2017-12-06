@@ -1,6 +1,5 @@
-#pragma config(Sensor, in1,    leftClawPoten,  sensorPotentiometer)
-#pragma config(Sensor, in2,    liftPoten,      sensorPotentiometer)
-#pragma config(Sensor, in3,    rightClawPoten, sensorPotentiometer)
+#pragma config(Sensor, in1,    baseLiftPoten,  sensorPotentiometer)
+#pragma config(Sensor, in2,    topLiftPoten,   sensorPotentiometer)
 #pragma config(Sensor, in4,    gyro,           sensorGyro)
 #pragma config(Sensor, dgtl1,  leftQuad,       sensorQuadEncoder)
 #pragma config(Sensor, dgtl3,  rightQuad,      sensorQuadEncoder)
@@ -52,7 +51,7 @@ void runBasicCompAuton(string majorSide, int minorSide, int zone)
 
 	//Go to mobile goal â Drop mobile base lift, lift cone, and drive straight
 	setForkliftPower(1);
-	setLiftPos(3500,7,-15);
+	setTopLiftPos(3500,7,-15);
 	driveStraight(1550,127); //drive to mobile goal
 
 	//pick up goal
@@ -86,7 +85,7 @@ void runBasicCompAuton(string majorSide, int minorSide, int zone)
 
 	//Score cone and back away
 	setClawPower(127);
-	setLiftPos(BACK,0.9); //lift up cone â?? possibly change this to not go back all the way (potentially wasting time in driver control)
+	setTopLiftPos(BACK,0.9); //lift up cone â?? possibly change this to not go back all the way (potentially wasting time in driver control)
 	setForkliftPower(1);
 	wait1Msec(500);
 	setClawPower(0);
@@ -106,7 +105,10 @@ task autonomous()
 task usercontrol()
 {
 	char direction = 1; //controls direction
-	bool btnEightRightPressed = false; //tracks if button was pressed
+	bool btnSevenLeftPressed = false; //tracks if button was pressed
+	bool coneUpPressed = false;
+	bool coneDownPressed = false;
+	bool coneZeroPressed = false;
 	bool centerPushed = false; //Center piston pushed or naw
 
 	while(true)
@@ -133,14 +135,17 @@ task usercontrol()
 		word btnSevenUp = vexRT[Btn7U]; //forklift up
 		word btnSevenDown = vexRT[Btn7D]; //forklift down
 		word btnSevenRight = vexRT[Btn7R]; //Pelvic thrust
-		word btnEightRight = vexRT[Btn8R]; //for toggling reverse direction
+		word btnSevenLeft = vexRT[Btn7L]; //for toggling reverse direction
+		word secondBtnSevenUp = vexRT[Btn7UXmtr2]; //+1 to cone count
+		word secondBtnSevenDown = vexRT[Btn7DXmtr2]; //-1 to cone count
+		word secondBtnSevenLeft = vexRT[Btn7LXmtr2]; //zero cone count
 
-		if(btnEightRight == 1 && !btnEightRightPressed){ //if button was pressed and was not already being pressed, change sign
+		if(btnSevenLeft == 1 && !btnSevenLeftPressed){ //if button was pressed and was not already being pressed, change sign
 			direction = -direction;
-			btnEightRightPressed = true;
+			btnSevenLeftPressed = true;
 		}
-		else if(btnEightRight == 0 && btnEightRightPressed) //if button is no longer being pressed, update bool
-			btnEightRightPressed = false;
+		else if(btnSevenLeft == 0 && btnSevenLeftPressed) //if button is no longer being pressed, update bool
+			btnSevenLeftPressed = false;
 
 		//Drive Motors
 		if(fabs(rightJoy) >= 15)
@@ -169,30 +174,30 @@ task usercontrol()
 		//Lift Motors
 		if(rightTriggerUp == 1)
 		{
-			setTopLiftPower(127);
-			//setLiftPos(SCORE,SCORE_KP);
+			//setTopLiftPower(127);
+			setTopLiftPos(SCORE,SCORE_KP);
 		}
 		else if(rightTriggerDown == 1)
 		{
-			setTopLiftPower(-80);
-			//setLiftPos(BACK,BACK_KP);
+			//setTopLiftPower(-80);
+			setTopLiftPos(BACK,BACK_KP);
 		}
 		/*
 		else if(btnSevenUp == 1)
 		{
 			setClawUntilPos(MATCHLOAD_CLAW,80);
-			setLiftPos(MATCHLOAD,MATCHLOAD_KP);
+			setTopLiftPos(MATCHLOAD,MATCHLOAD_KP);
 		}
 		else if(btnSevenDown == 1)
 		{
 			setClawUntilPos(BACK_CLAW,80);
-			setLiftPos(BACK,BACK_KP);
+			setTopLiftPos(BACK,BACK_KP);
 		}
 		*/
-		else
-		{
-			setTopLiftPower(0);
-		}
+		//else
+		//{
+		//	setTopLiftPower(0);
+		//}
 
 		if(btnEightUp == 1)
 		{
@@ -249,6 +254,37 @@ task usercontrol()
 				setClawPower(-80);
 			else
 				setClawPower(0);
+		}
+
+		//cone count
+		if(secondBtnSevenUp == 1 && !coneUpPressed) //if button is now pressed, update cones and update bool to reflect button pressed
+		{
+			conesStacked++;
+			coneUpPressed = true;
+		}
+		else if(secondBtnSevenUp == 0 && coneUpPressed) //if button is no longer pressed, update bool to reflect lack of press
+		{
+			coneUpPressed = true;
+		}
+
+		if(secondBtnSevenDown == 1 && !coneDownPressed) //if button is now pressed, update cones and update bool to reflect button pressed
+		{
+			conesStacked--;
+			coneDownPressed = true;
+		}
+		else if(secondBtnSevenDown == 0 && coneDownPressed) //if button is no longer pressed, update bool to reflect lack of press
+		{
+			coneDownPressed = true;
+		}
+
+		if(secondBtnSevenLeft == 1 && !coneZeroPressed) //if button is now pressed, update cones and update bool to reflect button pressed
+		{
+			conesStacked = 0;
+			coneZeroPressed = true;
+		}
+		else if(secondBtnSevenLeft == 0 && coneZeroPressed) //if button is no longer pressed, update bool to reflect lack of press
+		{
+			coneZeroPressed = true;
 		}
 	}
 }

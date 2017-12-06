@@ -1,6 +1,5 @@
-#pragma config(Sensor, in1,    leftClawPoten,  sensorPotentiometer)
-#pragma config(Sensor, in2,    liftPoten,      sensorPotentiometer)
-#pragma config(Sensor, in3,    rightClawPoten, sensorPotentiometer)
+#pragma config(Sensor, in1,    baseLiftPoten,  sensorPotentiometer)
+#pragma config(Sensor, in2,    topLiftPoten,   sensorPotentiometer)
 #pragma config(Sensor, in4,    gyro,           sensorGyro)
 #pragma config(Sensor, dgtl1,  leftQuad,       sensorQuadEncoder)
 #pragma config(Sensor, dgtl3,  rightQuad,      sensorQuadEncoder)
@@ -35,11 +34,18 @@ float rightPowerAdjustment = 0;
 float leftPowerAdjustment = 0;
 float theta = 0;
 
-//for setLiftPos task / setLiftPos method
-int desired;
-int powAfter;
-float kp;
+//for setTopLiftPos task / setTopLiftPos method
+int desiredTop;
+int powAfterTop;
+float kpTop;
 bool reachedMobileGoal = false;
+
+//for setBaseLiftPos task / setBaseLiftPos method
+int desiredBase;
+int powAfterBase;
+float kpBase;
+int conesStacked = 0;
+int baseLiftPositions[12] = {0,1,2,3,4,5,6,7,8,9,10,11};
 
 //for setClawUntilPos task / setClawUntilPos
 int desiredClaw;
@@ -115,31 +121,45 @@ task correctStraight()
 	}
 }
 
-task setLiftPosTask() //reachedMobileGoal is only used in auton to stop and hold lift in place if robot reaches goal unexpectedly early
+task setTopLiftPosTask() //reachedMobileGoal is only used in auton to stop and hold lift in place if robot reaches goal unexpectedly early
 {
 	bool ignore = false;
-	if((desired == BACK && SensorValue[liftPoten]<BACK) || reachedMobileGoal) //1000 = BACK value
+	if((desiredTop == BACK && SensorValue[topLiftPoten]<BACK) || reachedMobileGoal) //1000 = BACK value
 		ignore = true;
-	int err = desired - SensorValue[liftPoten];
+	int err = desiredTop - SensorValue[topLiftPoten];
 	int power = 127;
 
 	while(abs(err)>200 &&  !ignore) //adjust power of motors while error is outide of certain range, then set power to 0
 	{
-		err = desired - SensorValue[liftPoten];
-		power = (int) (err*127/4095*kp);
+		err = desiredTop - SensorValue[topLiftPoten];
+		power = (int) (err*127/4095*kpTop);
 		setTopLiftPower(power);
 		//writeDebugStreamLine("Poten: %d, Power: %d, Error: %d", SensorValue[liftPoten], power,err);
 	}
-	setTopLiftPower(powAfter);
+	setTopLiftPower(powAfterTop);
 	if(reachedMobileGoal)
 		setTopLiftPower(0);
+}
+
+task setBaseLiftPosTask()
+{
+	int err = desiredBase - SensorValue[baseLiftPoten];
+	int power = 127;
+	while(abs(err)>200) //adjust power of motors while error is outide of certain range, then set power to 0
+	{
+		err = desiredBase - SensorValue[baseLiftPoten];
+		power = (int) (err*127/4095*kpBase);
+		setTopLiftPower(power);
+		//writeDebugStreamLine("Poten: %d, Power: %d, Error: %d", SensorValue[liftPoten], power,err);
+	}
+	setTopLiftPower(powAfterBase);
 }
 
 task setClawUntilPosTask()
 {
 	userControlClaw = false;
 	setClawPower(clawPower);
-	while(SensorValue[liftPoten]>desiredClaw){} //wait until lift goes past a certain point moving from score to back
+	while(SensorValue[topLiftPoten]>desiredClaw){} //wait until lift goes past a certain point moving from score to back
 	setClawPower(-clawPower);
 	wait1Msec(10);
 	setClawPower(0);
@@ -155,7 +175,7 @@ void driveStraight(int dest, int basePower, float rightMultiplier = 0.58) //uses
 	int err = dest;
 	int power = 127;
 	startTask(correctStraight);
-			writeDebugStreamLine("err: %d, power: %d sdfdgdsgfgfsggffs",err,power);
+	writeDebugStreamLine("err: %d, power: %d sdfdgdsgfgfsggffs",err,power);
 	while(fabs(err)>20 && fabs(dest - (-1*SensorValue[rightQuad]))>20)
 	{
 		err = dest - SensorValue[leftQuad];
@@ -184,13 +204,22 @@ void turnToPos(int pos)
 	}
 }
 
-void setLiftPos(int aDesired, float aKp, int aPowAfter = 0)
+void setTopLiftPos(int aDesired, float aKp, int aPowAfter = 0)
 {
 	reachedMobileGoal = false;
-	desired = aDesired;
-	kp = aKp;
-	powAfter = aPowAfter;
-	startTask(setLiftPosTask);
+	desiredTop = aDesired;
+	kpTop = aKp;
+	powAfterTop = aPowAfter;
+	startTask(setTopLiftPosTask);
+}
+
+void setBaseLiftPos(int aDesired, float aKp, int aPowAfter = 0)
+{
+	reachedMobileGoal = false;
+	desiredBase = aDesired;
+	kpBase = aKp;
+	powAfterBase = aPowAfter;
+	startTask(setBaseLiftPosTask);
 }
 
 void setClawUntilPos(int aDesiredClaw, int aClawPower)
