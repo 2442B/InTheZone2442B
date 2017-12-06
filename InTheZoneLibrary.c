@@ -24,10 +24,24 @@
 
 ////GLOBAL VARIABLES////
 //Poten Values For Lift -- Values increase as lift moves backwards
-enum PotenValues {BACK = 1000, MATCHLOAD = 1300, SCORE = 4095, BACK_CLAW = 3700, MATCHLOAD_CLAW = 750};
-float BACK_KP = 1.7;
-float MATCHLOAD_KP = 2;
-float SCORE_KP = 1;
+enum PotenValuesTop {BACK_TOP = 1000, UPRIGHT_TOP = 3008, MATCHLOAD_TOP = 1300, SCORE_TOP = 4095};
+enum PotenValuesClaw {BACK_CLAW = 3700, MATCHLOAD_CLAW = 750}
+enum PotenValuesBase {BACK_BASE = 3980, HIGHEST_BASE =  2608}; //values increase as lift moves down
+int baseLiftPositions[12] = {3980,3980,3980,3840,3720,3590,3450,3300,3250,3100,2950,2800};
+/*base
+back = 3980
+highest = 2423
+
+topLift:
+back = 355
+up = 2608
+scoreAll = 4095 (deadzone after)
+*/
+float BACK_KP_TOP = 1.7;
+float MATCHLOAD_KP_TOP = 2;
+float SCORE_KP_TOP = 1;
+float BACK_KP_BASE = 7;
+float SCORE_KP_BASE = 15;
 
 //for correctStraight task / driveStraight method
 float rightPowerAdjustment = 0;
@@ -45,7 +59,6 @@ int desiredBase;
 int powAfterBase;
 float kpBase;
 int conesStacked = 0;
-int baseLiftPositions[12] = {0,1,2,3,4,5,6,7,8,9,10,11};
 
 //for setClawUntilPos task / setClawUntilPos
 int desiredClaw;
@@ -124,7 +137,7 @@ task correctStraight()
 task setTopLiftPosTask() //reachedMobileGoal is only used in auton to stop and hold lift in place if robot reaches goal unexpectedly early
 {
 	bool ignore = false;
-	if((desiredTop == BACK && SensorValue[topLiftPoten]<BACK) || reachedMobileGoal) //1000 = BACK value
+	if((desiredTop == BACK_TOP && SensorValue[topLiftPoten]<BACK_TOP) || reachedMobileGoal) //1000 = BACK value
 		ignore = true;
 	int err = desiredTop - SensorValue[topLiftPoten];
 	int power = 127;
@@ -149,7 +162,7 @@ task setBaseLiftPosTask()
 	{
 		err = desiredBase - SensorValue[baseLiftPoten];
 		power = (int) (err*127/4095*kpBase);
-		setTopLiftPower(power);
+		setBaseLiftPower(power);
 		//writeDebugStreamLine("Poten: %d, Power: %d, Error: %d", SensorValue[liftPoten], power,err);
 	}
 	setTopLiftPower(powAfterBase);
@@ -165,6 +178,7 @@ task setClawUntilPosTask()
 	setClawPower(0);
 	userControlClaw = true;
 }
+
 
 ///////COMPLEX METHODS: a+bi///////
 void driveStraight(int dest, int basePower, float rightMultiplier = 0.58) //uses correctStraight task (with gyro) to dive straight
@@ -227,4 +241,37 @@ void setClawUntilPos(int aDesiredClaw, int aClawPower)
 	desiredClaw = aDesiredClaw;
 	clawPower = aClawPower;
 	startTask(setClawUntilPosTask);
+}
+
+/////MORE COMPLEX TASKS////
+task autoScoreTask()
+{
+	conesStacked++;
+	int potenConstant = 0;
+	writeDebugStreamLine("cones stacked when in method: %d, baseLiftPos: %d", conesStacked);
+	writeDebugStreamLine(" baseLiftPos: %d", 	baseLiftPositions[conesStacked]);
+	setBaseLiftPos(baseLiftPositions[conesStacked],SCORE_KP_BASE);
+	while(SensorValue[baseLiftPoten] > baseLiftPositions[conesStacked] - potenConstant){}
+	setTopLiftPos(SCORE_TOP,SCORE_KP_TOP);
+}
+
+task autoBackTask()
+{
+	setTopLiftPos(BACK_TOP,BACK_KP_TOP);
+	setClawPower(80); //open claw
+	while(SensorValue[topLiftPoten]>UPRIGHT_TOP){}
+	setBaseLiftPos(BACK_BASE,BACK_KP_BASE);
+	setClawPower(0); //close claw
+}
+
+////AND CORRESPONDING MORE COMPLEX METHODS/////
+void autoScore()
+{
+	startTask(autoScoreTask);
+	wait1Msec(3000);
+}
+
+void autoBack()
+{
+	startTask(autoBackTask);
 }

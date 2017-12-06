@@ -85,7 +85,7 @@ void runBasicCompAuton(string majorSide, int minorSide, int zone)
 
 	//Score cone and back away
 	setClawPower(127);
-	setTopLiftPos(BACK,0.9); //lift up cone â?? possibly change this to not go back all the way (potentially wasting time in driver control)
+	setTopLiftPos(BACK_TOP,0.9); //lift up cone â?? possibly change this to not go back all the way (potentially wasting time in driver control)
 	setForkliftPower(1);
 	wait1Msec(500);
 	setClawPower(0);
@@ -136,6 +136,8 @@ task usercontrol()
 		word btnSevenDown = vexRT[Btn7D]; //forklift down
 		word btnSevenRight = vexRT[Btn7R]; //Pelvic thrust
 		word btnSevenLeft = vexRT[Btn7L]; //for toggling reverse direction
+		word btnEightLeft = vexRT[Btn8L]; //auto score
+		word btnEightRight = vexRT[Btn8R]; //auto back
 		word secondBtnSevenUp = vexRT[Btn7UXmtr2]; //+1 to cone count
 		word secondBtnSevenDown = vexRT[Btn7DXmtr2]; //-1 to cone count
 		word secondBtnSevenLeft = vexRT[Btn7LXmtr2]; //zero cone count
@@ -175,12 +177,12 @@ task usercontrol()
 		if(rightTriggerUp == 1)
 		{
 			//setTopLiftPower(127);
-			setTopLiftPos(SCORE,SCORE_KP);
+			setTopLiftPos(SCORE_TOP,SCORE_KP_TOP);
 		}
 		else if(rightTriggerDown == 1)
 		{
 			//setTopLiftPower(-80);
-			setTopLiftPos(BACK,BACK_KP);
+			setTopLiftPos(BACK_TOP,BACK_KP_TOP);
 		}
 		/*
 		else if(btnSevenUp == 1)
@@ -246,15 +248,19 @@ task usercontrol()
 		}
 
 
-		//pincer
+		//claw
 		if(userControlClaw){
 			if(leftTriggerDown == 1)
-				setClawPower(80);
+				setClawPower(80); //open claw
 			else if(leftTriggerUp == 1)
-				setClawPower(-80);
+				setClawPower(-80); //close claw
 			else
 				setClawPower(0);
 		}
+
+		//testing up and down
+		if(btnEightLeft == 1){autoBack();}
+		else if(btnEightRight == 1){autoScore(); writeDebugStreamLine("Cones Stacked: %d", conesStacked);}
 
 		//cone count
 		if(secondBtnSevenUp == 1 && !coneUpPressed) //if button is now pressed, update cones and update bool to reflect button pressed
