@@ -25,7 +25,7 @@
 ////GLOBAL VARIABLES////
 //Poten Values For Lift -- Values increase as lift moves backwards
 enum PotenValuesTop {BACK_TOP = 1000, UPRIGHT_TOP = 3008, MATCHLOAD_TOP = 1300, SCORE_TOP = 4095};
-enum PotenValuesClaw {BACK_CLAW = 3700, MATCHLOAD_CLAW = 750}
+enum PotenValuesClaw {BACK_CLAW = 3700, MATCHLOAD_CLAW = 750};
 enum PotenValuesBase {BACK_BASE = 3980, HIGHEST_BASE =  2608}; //values increase as lift moves down
 int baseLiftPositions[12] = {3980,3980,3980,3840,3720,3590,3450,3300,3250,3100,2950,2800};
 /*base
@@ -39,9 +39,9 @@ scoreAll = 4095 (deadzone after)
 */
 float BACK_KP_TOP = 1.7;
 float MATCHLOAD_KP_TOP = 2;
-float SCORE_KP_TOP = 1;
+float SCORE_KP_TOP = 2;
 float BACK_KP_BASE = 7;
-float SCORE_KP_BASE = 15;
+float SCORE_KP_BASE = 25;
 
 //for correctStraight task / driveStraight method
 float rightPowerAdjustment = 0;
@@ -165,7 +165,7 @@ task setBaseLiftPosTask()
 		setBaseLiftPower(power);
 		//writeDebugStreamLine("Poten: %d, Power: %d, Error: %d", SensorValue[liftPoten], power,err);
 	}
-	setTopLiftPower(powAfterBase);
+	setBaseLiftPower(powAfterBase);
 }
 
 task setClawUntilPosTask()
@@ -257,8 +257,8 @@ task autoScoreTask()
 
 task autoBackTask()
 {
-	setTopLiftPos(BACK_TOP,BACK_KP_TOP);
 	setClawPower(80); //open claw
+	setTopLiftPos(BACK_TOP,BACK_KP_TOP);
 	while(SensorValue[topLiftPoten]>UPRIGHT_TOP){}
 	setBaseLiftPos(BACK_BASE,BACK_KP_BASE);
 	setClawPower(0); //close claw

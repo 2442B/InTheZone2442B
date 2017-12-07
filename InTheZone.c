@@ -104,8 +104,6 @@ task autonomous()
 
 task usercontrol()
 {
-	char direction = 1; //controls direction
-	bool btnSevenLeftPressed = false; //tracks if button was pressed
 	bool coneUpPressed = false;
 	bool coneDownPressed = false;
 	bool coneZeroPressed = false;
@@ -135,42 +133,22 @@ task usercontrol()
 		word btnSevenUp = vexRT[Btn7U]; //forklift up
 		word btnSevenDown = vexRT[Btn7D]; //forklift down
 		word btnSevenRight = vexRT[Btn7R]; //Pelvic thrust
-		word btnSevenLeft = vexRT[Btn7L]; //for toggling reverse direction
 		word btnEightLeft = vexRT[Btn8L]; //auto score
 		word btnEightRight = vexRT[Btn8R]; //auto back
 		word secondBtnSevenUp = vexRT[Btn7UXmtr2]; //+1 to cone count
 		word secondBtnSevenDown = vexRT[Btn7DXmtr2]; //-1 to cone count
 		word secondBtnSevenLeft = vexRT[Btn7LXmtr2]; //zero cone count
 
-		if(btnSevenLeft == 1 && !btnSevenLeftPressed){ //if button was pressed and was not already being pressed, change sign
-			direction = -direction;
-			btnSevenLeftPressed = true;
-		}
-		else if(btnSevenLeft == 0 && btnSevenLeftPressed) //if button is no longer being pressed, update bool
-			btnSevenLeftPressed = false;
-
 		//Drive Motors
 		if(fabs(rightJoy) >= 15)
-			if(direction==1)
 			setRightMotors(rightJoy);
 		else
-			setLeftMotors(rightJoy);
-		else
-			if(direction==1)
 			setRightMotors(0);
-		else
-			setLeftMotors(0);
 
 		if(fabs(leftJoy) >= 15)
-			if(direction==1)
 			setLeftMotors(leftJoy);
 		else
-			setRightMotors(leftJoy);
-		else
-			if(direction==1)
 			setLeftMotors(0);
-		else
-			setRightMotors(0);
 
 
 		//Lift Motors
