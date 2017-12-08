@@ -24,10 +24,10 @@
 
 ////GLOBAL VARIABLES////
 //Poten Values For Lift -- Values increase as lift moves backwards
-enum PotenValuesTop {BACK_TOP = 1000, UPRIGHT_TOP = 3008, MATCHLOAD_TOP = 1300, SCORE_TOP = 4095};
+enum PotenValuesTop {BACK_TOP = 1000, UPRIGHT_TOP = 2508, MATCHLOAD_TOP = 570, SCORE_TOP = 4095};
 enum PotenValuesClaw {BACK_CLAW = 3700, MATCHLOAD_CLAW = 750};
-enum PotenValuesBase {BACK_BASE = 3980, HIGHEST_BASE =  2608}; //values increase as lift moves down
-int baseLiftPositions[12] = {3980,3980,3980,3840,3720,3590,3450,3300,3250,3100,2950,2800};
+enum PotenValuesBase {BACK_BASE = 3875, MATCHLOAD_BASE = 2950, HIGHEST_BASE =  2608}; //values increase as lift moves down
+int baseLiftPositions[12] = {3980,3980,3750,3700,3500,3350,3100,3400,3300,3250,2695,2525};
 /*base
 back = 3980
 highest = 2423
@@ -40,8 +40,10 @@ scoreAll = 4095 (deadzone after)
 float BACK_KP_TOP = 1.7;
 float MATCHLOAD_KP_TOP = 2;
 float SCORE_KP_TOP = 2;
-float BACK_KP_BASE = 7;
-float SCORE_KP_BASE = 25;
+float BACK_KP_BASE = 10;
+float SCORE_KP_BASE = 250	;
+float MATCHLOAD_KP_BASE = 10;
+int ERR_MARGIN = 50;
 
 //for correctStraight task / driveStraight method
 float rightPowerAdjustment = 0;
@@ -64,6 +66,7 @@ int conesStacked = 0;
 int desiredClaw;
 int clawPower;
 bool userControlClaw = true;
+bool userControlBase = true;
 
 /////BASIC MOTOR METHODS/////
 void setLeftMotors(int power)
@@ -147,8 +150,10 @@ task setTopLiftPosTask() //reachedMobileGoal is only used in auton to stop and h
 		err = desiredTop - SensorValue[topLiftPoten];
 		power = (int) (err*127/4095*kpTop);
 		setTopLiftPower(power);
-		//writeDebugStreamLine("Poten: %d, Power: %d, Error: %d", SensorValue[liftPoten], power,err);
+		//writeDebugStreamLine("Poten: %d, Power: %d, Error: %d", SensorValue[topLiftPoten], power,err);
+		wait1Msec(50);
 	}
+	//writeDebugStreamLine("Moving to powAfter");
 	setTopLiftPower(powAfterTop);
 	if(reachedMobileGoal)
 		setTopLiftPower(0);
@@ -156,16 +161,19 @@ task setTopLiftPosTask() //reachedMobileGoal is only used in auton to stop and h
 
 task setBaseLiftPosTask()
 {
+	userControlBase = false;
 	int err = desiredBase - SensorValue[baseLiftPoten];
 	int power = 127;
-	while(abs(err)>200) //adjust power of motors while error is outide of certain range, then set power to 0
+	while(abs(err)>ERR_MARGIN) //adjust power of motors while error is outide of certain range, then set power to 0
 	{
 		err = desiredBase - SensorValue[baseLiftPoten];
 		power = (int) (err*127/4095*kpBase);
 		setBaseLiftPower(power);
-		//writeDebugStreamLine("Poten: %d, Power: %d, Error: %d", SensorValue[liftPoten], power,err);
+		writeDebugStreamLine("Poten: %d, Power: %d, Error: %d", SensorValue[baseLiftPoten], power,err);
+		wait1Msec(50);
 	}
 	setBaseLiftPower(powAfterBase);
+
 }
 
 task setClawUntilPosTask()
@@ -189,7 +197,7 @@ void driveStraight(int dest, int basePower, float rightMultiplier = 0.58) //uses
 	int err = dest;
 	int power = 127;
 	startTask(correctStraight);
-	writeDebugStreamLine("err: %d, power: %d sdfdgdsgfgfsggffs",err,power);
+	//writeDebugStreamLine("err: %d, power: %d sdfdgdsgfgfsggffs",err,power);
 	while(fabs(err)>20 && fabs(dest - (-1*SensorValue[rightQuad]))>20)
 	{
 		err = dest - SensorValue[leftQuad];
@@ -243,24 +251,27 @@ void setClawUntilPos(int aDesiredClaw, int aClawPower)
 	startTask(setClawUntilPosTask);
 }
 
-/////MORE COMPLEX TASKS////
+/////MORE COMPLEX TASKS///
 task autoScoreTask()
 {
-	conesStacked++;
-	int potenConstant = 0;
-	writeDebugStreamLine("cones stacked when in method: %d, baseLiftPos: %d", conesStacked);
-	writeDebugStreamLine(" baseLiftPos: %d", 	baseLiftPositions[conesStacked]);
+	int potenConstant = 100;
+	//writeDebugStreamLine("cones stacked when in method: %d, baseLiftPos: %d", conesStacked);
+	//writeDebugStreamLine(" baseLiftPos: %d", 	baseLiftPositions[conesStacked]);
 	setBaseLiftPos(baseLiftPositions[conesStacked],SCORE_KP_BASE);
-	while(SensorValue[baseLiftPoten] > baseLiftPositions[conesStacked] - potenConstant){}
+	writeDebugStreamLine("must be less than this level: %d", baseLiftPositions[conesStacked] - potenConstant - ERR_MARGIN);
+	while(SensorValue[baseLiftPoten] > baseLiftPositions[conesStacked] + potenConstant + ERR_MARGIN){}
 	setTopLiftPos(SCORE_TOP,SCORE_KP_TOP);
+	conesStacked++;
 }
 
 task autoBackTask()
 {
-	setClawPower(80); //open claw
+	userControlClaw = false;
+	if(SensorValue[topLiftPoten]>UPRIGHT_TOP)
+		setClawPower(-80); //open claw
 	setTopLiftPos(BACK_TOP,BACK_KP_TOP);
 	while(SensorValue[topLiftPoten]>UPRIGHT_TOP){}
-	setBaseLiftPos(BACK_BASE,BACK_KP_BASE);
+	setBaseLiftPos(BACK_BASE,BACK_KP_BASE,0);
 	setClawPower(0); //close claw
 }
 

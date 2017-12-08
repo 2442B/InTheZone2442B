@@ -50,13 +50,13 @@ void runBasicCompAuton(string majorSide, int minorSide, int zone)
 	reachedMobileGoal = false; //will act as hard stop for lifting cone â?? when reachedMobileGoal is true, the lift will immediately drop
 
 	//Go to mobile goal â Drop mobile base lift, lift cone, and drive straight
-	setForkliftPower(1);
+	setForkliftPower(0);
 	setTopLiftPos(3500,7,-15);
 	driveStraight(1550,127); //drive to mobile goal
 
 	//pick up goal
 	reachedMobileGoal = true; //force cone lift to drop
-	setForkliftPower(0); //pick up goal
+	setForkliftPower(1); //pick up goal
 	setTopLiftPower(0);
 	wait1Msec(300);
 
@@ -86,7 +86,7 @@ void runBasicCompAuton(string majorSide, int minorSide, int zone)
 	//Score cone and back away
 	setClawPower(127);
 	setTopLiftPos(BACK_TOP,0.9); //lift up cone â?? possibly change this to not go back all the way (potentially wasting time in driver control)
-	setForkliftPower(1);
+	setForkliftPower(0);
 	wait1Msec(500);
 	setClawPower(0);
 	driveStraight(-800,127,1);
@@ -135,6 +135,7 @@ task usercontrol()
 		word btnSevenRight = vexRT[Btn7R]; //Pelvic thrust
 		word btnEightLeft = vexRT[Btn8L]; //auto score
 		word btnEightRight = vexRT[Btn8R]; //auto back
+		word btnSevenLeft = vexRT[Btn7L]; //no more auton testing, move to matchloads
 		word secondBtnSevenUp = vexRT[Btn7UXmtr2]; //+1 to cone count
 		word secondBtnSevenDown = vexRT[Btn7DXmtr2]; //-1 to cone count
 		word secondBtnSevenLeft = vexRT[Btn7LXmtr2]; //zero cone count
@@ -165,13 +166,13 @@ task usercontrol()
 		/*
 		else if(btnSevenUp == 1)
 		{
-			setClawUntilPos(MATCHLOAD_CLAW,80);
-			setTopLiftPos(MATCHLOAD,MATCHLOAD_KP);
+		setClawUntilPos(MATCHLOAD_CLAW,80);
+		setTopLiftPos(MATCHLOAD,MATCHLOAD_KP);
 		}
 		else if(btnSevenDown == 1)
 		{
-			setClawUntilPos(BACK_CLAW,80);
-			setTopLiftPos(BACK,BACK_KP);
+		setClawUntilPos(BACK_CLAW,80);
+		setTopLiftPos(BACK,BACK_KP);
 		}
 		*/
 		//else
@@ -179,17 +180,25 @@ task usercontrol()
 		//	setTopLiftPower(0);
 		//}
 
+		//BASE LIFT
 		if(btnEightUp == 1)
 		{
-			setBaseLiftPower(-127);
+			if(userControlBase)
+				setBaseLiftPower(-127);
+			else
+				userControlBase = true;
 		}
 		else if(btnEightDown == 1)
 		{
-			setBaseLiftPower(80);
+			if(userControlBase)
+				setBaseLiftPower(80);
+			else
+				userControlBase = true;
 		}
 		else
 		{
-			setBaseLiftPower(0);
+			if(userControlBase)
+				setBaseLiftPower(0);
 		}
 
 		//Mobile Goal Base Lifters
@@ -199,20 +208,20 @@ task usercontrol()
 			/*
 			if(centerPushed)
 			{
-				SensorValue(centerPiston) = 0;
-				centerPushed = false;
+			SensorValue(centerPiston) = 0;
+			centerPushed = false;
 			}
 			*/
 		}
 		else if(btnSevenDown == 1)
 			setForkliftPower(0);
-	/*
-			if(centerPushed)
-			{
-				SensorValue(centerPiston) = 0;
-				centerPushed = false;
-			}
-			*/ //might get caught while withdrawing? task? refuse to go up or down while extended? good idea poor execution?
+		/*
+		if(centerPushed)
+		{
+		SensorValue(centerPiston) = 0;
+		centerPushed = false;
+		}
+		*/ //might get caught while withdrawing? task? refuse to go up or down while extended? good idea poor execution?
 
 		if(btnSevenRight == 1 && !centerPushed)
 		{
@@ -226,19 +235,37 @@ task usercontrol()
 		}
 
 
+
 		//claw
-		if(userControlClaw){
-			if(leftTriggerDown == 1)
-				setClawPower(80); //open claw
-			else if(leftTriggerUp == 1)
-				setClawPower(-80); //close claw
+		if(leftTriggerDown == 1)
+		{
+			if(userControlClaw)
+				setClawPower(70); //close claw
 			else
+				userControlClaw = true;
+		}
+		else if(leftTriggerUp == 1)
+		{
+			if(userControlClaw)
+				setClawPower(-70); //open claw
+			else
+				userControlClaw = true;
+		}
+		else
+		{
+			if(userControlClaw)
 				setClawPower(0);
 		}
 
-		//testing up and down
+		//AUTO METHODS
 		if(btnEightLeft == 1){autoBack();}
 		else if(btnEightRight == 1){autoScore(); writeDebugStreamLine("Cones Stacked: %d", conesStacked);}
+
+		if(btnSevenLeft == 1)
+		{
+			setBaseLiftPos(MATCHLOAD_BASE,MATCHLOAD_KP_BASE);
+			setTopLiftPos(MATCHLOAD_TOP,MATCHLOAD_KP_TOP);
+		}
 
 		//cone count
 		if(secondBtnSevenUp == 1 && !coneUpPressed) //if button is now pressed, update cones and update bool to reflect button pressed
