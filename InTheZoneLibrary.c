@@ -24,10 +24,11 @@
 
 ////GLOBAL VARIABLES////
 //Poten Values For Lift -- Values increase as lift moves backwards
-enum PotenValuesTop {BACK_TOP = 1000, UPRIGHT_TOP = 2508, MATCHLOAD_TOP = 570, SCORE_TOP = 4095};
+enum PotenValuesTop {BACK_TOP = 1000, UPRIGHT_TOP = 2508, MATCHLOAD_TOP = 580, SCORE_TOP = 4095};
 enum PotenValuesClaw {BACK_CLAW = 3700, MATCHLOAD_CLAW = 750};
-enum PotenValuesBase {BACK_BASE = 3875, MATCHLOAD_BASE = 2950, HIGHEST_BASE =  2608}; //values increase as lift moves down
+enum PotenValuesBase {BACK_BASE = 3875, MATCHLOAD_BASE = 3200, HIGHEST_BASE =  2608}; //values increase as lift moves down
 int baseLiftPositions[12] = {3980,3980,3750,3700,3500,3350,3100,3400,3300,3250,2695,2525};
+
 /*base
 back = 3980
 highest = 2423

@@ -57,7 +57,7 @@ void runBasicCompAuton(string majorSide, int minorSide, int zone)
 	//pick up goal
 	reachedMobileGoal = true; //force cone lift to drop
 	setForkliftPower(1); //pick up goal
-	setTopLiftPos(SCORE_TOP + 300, 7, -15); //+300 quick fix for wrong enum after pot swap
+	setTopLiftPos(SCORE_TOP + 150, 7, -15); //+300 quick fix for wrong enum after pot swap
 	wait1Msec(300);
 
 	//drive back
@@ -120,12 +120,12 @@ task usercontrol()
 
 	while(true)
 	{
-		if(vexRT[Btn7L]==1)
-		{
-			string side = "blue";
-			runBasicCompAuton(side,1,10);
-			writeDebugStreamLine("Running basic comp auton");
-		}
+		//if(vexRT[Btn7L]==1)
+		//{
+		//	string side = "blue";
+		//	runBasicCompAuton(side,1,10);
+		//	writeDebugStreamLine("Running basic comp auton");
+		//}
 		//if(vexRT[Btn7R]==1)
 		//{
 		//	string side = "blue";
