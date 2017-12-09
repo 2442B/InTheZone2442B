@@ -51,19 +51,21 @@ void runBasicCompAuton(string majorSide, int minorSide, int zone)
 
 	//Go to mobile goal â Drop mobile base lift, lift cone, and drive straight
 	setForkliftPower(0);
-	setTopLiftPos(3500,7,-15);
-	driveStraight(1550,127); //drive to mobile goal
+	setTopLiftPos(BACK_TOP,7,-15);
+	driveStraight(1600,127); //drive to mobile goal
 
 	//pick up goal
 	reachedMobileGoal = true; //force cone lift to drop
 	setForkliftPower(1); //pick up goal
-	setTopLiftPower(0);
+	setTopLiftPos(SCORE_TOP + 300, 7, -15); //+300 quick fix for wrong enum after pot swap
 	wait1Msec(300);
 
 	//drive back
 	turnToPos(0);
 	driveStraight(-1200,127); //drive back -1000
+	setClawPower(-127);
 	wait1Msec(300);
+	setClawPower(0);
 
 	//Score goal
 	if(zone == 5)
@@ -79,17 +81,24 @@ void runBasicCompAuton(string majorSide, int minorSide, int zone)
 		driveStraight(400,127);
 		//turnDeg(250);
 		turnToPos(-2245*minorSide);
-		driveStraight(750,127);
+		driveStraight(700,127);
 	}
-	wait1Msec(10);
+	//setClawPower(-127);
+	wait1Msec(250);
+	setTopLiftPos(3100,7,-15);
+	wait1Msec(150);
+	//wait1Msec(250);
 
 	//Score cone and back away
 	setClawPower(127);
-	setTopLiftPos(BACK_TOP,0.9); //lift up cone â?? possibly change this to not go back all the way (potentially wasting time in driver control)
+	//moved earlier
+	setBaseLiftPos(3850, 7); //lift up cone â?? possibly change this to not go back all the way (potentially wasting time in driver control)
 	setForkliftPower(0);
 	wait1Msec(500);
 	setClawPower(0);
 	driveStraight(-800,127,1);
+	wait1Msec(250);
+	setTopLiftPower(0);
 	writeDebugStreamLine("Time: %d", time1(T1));
 }
 
@@ -111,11 +120,12 @@ task usercontrol()
 
 	while(true)
 	{
-		//if(vexRT[Btn7L]==1)
-		//{
-		//	string side = "blue";
-		//	runBasicCompAuton(side,1,10);
-		//}
+		if(vexRT[Btn7L]==1)
+		{
+			string side = "blue";
+			runBasicCompAuton(side,1,10);
+			writeDebugStreamLine("Running basic comp auton");
+		}
 		//if(vexRT[Btn7R]==1)
 		//{
 		//	string side = "blue";
@@ -261,11 +271,11 @@ task usercontrol()
 		if(btnEightLeft == 1){autoBack();}
 		else if(btnEightRight == 1){autoScore(); writeDebugStreamLine("Cones Stacked: %d", conesStacked);}
 
-		if(btnSevenLeft == 1)
-		{
-			setBaseLiftPos(MATCHLOAD_BASE,MATCHLOAD_KP_BASE);
-			setTopLiftPos(MATCHLOAD_TOP,MATCHLOAD_KP_TOP);
-		}
+		//if(btnSevenLeft == 1)
+		//{
+		//	setBaseLiftPos(MATCHLOAD_BASE,MATCHLOAD_KP_BASE);
+		//	setTopLiftPos(MATCHLOAD_TOP,MATCHLOAD_KP_TOP);
+		//}
 
 		//cone count
 		if(secondBtnSevenUp == 1 && !coneUpPressed) //if button is now pressed, update cones and update bool to reflect button pressed
