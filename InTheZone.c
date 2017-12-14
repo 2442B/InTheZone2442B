@@ -10,7 +10,8 @@
 #pragma config(Sensor, dgtl10, greenLED,       sensorLEDtoVCC)
 #pragma config(Sensor, dgtl11, leftPiston,     sensorDigitalOut)
 #pragma config(Sensor, dgtl12, rightPiston,    sensorDigitalOut)
-#pragma config(Motor,  port2,           topLift,       tmotorVex393_MC29, openLoop)
+#pragma config(Motor,  port1,           topLift,       tmotorVex393_HBridge, openLoop)
+#pragma config(Motor,  port2,           baseLift,      tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port3,           driveLeftFront, tmotorVex393_MC29, openLoop, reversed)
 #pragma config(Motor,  port4,           driveLeftBack, tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port5,           driveRightFront, tmotorVex393_MC29, openLoop, reversed)
@@ -217,12 +218,10 @@ task usercontrol()
 		//Mobile Goal Base Lifters
 		if(btnSevenUp == 1)
 		{
-			setForkliftPower(127);
-			if(SensorValue(forkliftButton) == 0)
-			{
-				SensorValue(centerPiston) = 0;
-				centerPushed = false;
-			}
+			if(SensorValue(forkliftButton) == 1)
+				setForkliftPower(127);
+			else
+				setForkliftPower(0);
 		}
 		else if(btnSevenDown == 1)
 			setForkliftPower(-127);
