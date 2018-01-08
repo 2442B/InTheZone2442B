@@ -209,6 +209,7 @@ void driveStraight(int dest, int basePower, float rightMultiplier = 0.58) //uses
 		power = basePower*sgn(err);
 		setRightMotors((int)(power*rightMultiplier + rightPowerAdjustment));
 		setLeftMotors((int) (power+leftPowerAdjustment));
+		wait1Msec(50);
 		//writeDebugStreamLine("RightAdjustment: %d, LeftAdjustment: %d", rightPowerAdjustment, leftPowerAdjustment);
 		//writeDebugStreamLine("err: %d, power: %d, rpower: %d",err,power,(int)(power*rightMultiplier + rightPowerAdjustment));
 	}

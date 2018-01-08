@@ -197,6 +197,7 @@ task usercontrol()
 		//BASE LIFT
 		if(btnEightUp == 1)
 		{
+			writeDebugStreamLine("%d",userControlBase);
 			if(userControlBase)
 				setBaseLiftPower(-127);
 			else
