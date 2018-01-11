@@ -1,15 +1,13 @@
-#pragma config(Sensor, in1,    baseLiftPoten,  sensorPotentiometer)
-#pragma config(Sensor, in2,    topLiftPoten,   sensorPotentiometer)
+#pragma config(Sensor, in1,    topLiftPoten,   sensorPotentiometer)
+#pragma config(Sensor, in2,    baseLiftPoten,  sensorPotentiometer)
 #pragma config(Sensor, in4,    gyro,           sensorGyro)
-#pragma config(Sensor, dgtl1,  leftQuad,       sensorQuadEncoder)
-#pragma config(Sensor, dgtl3,  rightQuad,      sensorQuadEncoder)
+#pragma config(Sensor, dgtl1,  rightQuad,      sensorQuadEncoder)
 #pragma config(Sensor, dgtl5,  forkliftButton, sensorDigitalIn)
 #pragma config(Sensor, dgtl7,  centerPiston,   sensorDigitalOut)
 #pragma config(Sensor, dgtl8,  redLED,         sensorLEDtoVCC)
 #pragma config(Sensor, dgtl9,  yellowLED,      sensorLEDtoVCC)
 #pragma config(Sensor, dgtl10, greenLED,       sensorLEDtoVCC)
-#pragma config(Sensor, dgtl11, leftPiston,     sensorDigitalOut)
-#pragma config(Sensor, dgtl12, rightPiston,    sensorDigitalOut)
+#pragma config(Sensor, dgtl11, leftQuad,       sensorQuadEncoder)
 #pragma config(Motor,  port1,           claw,          tmotorVex393_HBridge, openLoop)
 #pragma config(Motor,  port2,           topLiftLeft,   tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port3,           topLiftRight,  tmotorVex393_MC29, openLoop)
@@ -26,6 +24,7 @@
 
 ////GLOBAL VARIABLES////
 //Poten Values For Lift -- Values increase as lift moves backwards
+enum ForkliftPos {FORKLIFT_UP=1,FORKLIFT_DOWN=-1};
 enum PotenValuesTop {BACK_TOP = 1000, UPRIGHT_TOP = 2508, MATCHLOAD_TOP = 580, SCORE_TOP = 4095};
 enum PotenValuesClaw {BACK_CLAW = 3700, MATCHLOAD_CLAW = 750};
 enum PotenValuesBase {BACK_BASE = 3875, MATCHLOAD_BASE = 3200, HIGHEST_BASE =  2608}; //values increase as lift moves down
@@ -47,6 +46,9 @@ float BACK_KP_BASE = 10;
 float SCORE_KP_BASE = 250	;
 float MATCHLOAD_KP_BASE = 10;
 int ERR_MARGIN = 50;
+
+//for forkliftPos task/method
+float forkliftPos = FORKLIFT_UP;
 
 //for correctStraight task / driveStraight method
 float rightPowerAdjustment = 0;
@@ -130,12 +132,12 @@ task correctStraight()
 		err = theta - SensorValue[gyro];
 		deriv = (err-oldErr)*0.5; //if error is increasing, apply more power (compensate for less momentum). else, apply more power
 		integral = totalErr * 0.03;
-		power = err*0.5 + deriv + integral;
+		power = err*2 + deriv + integral;
 		rightPowerAdjustment = power;
 		leftPowerAdjustment = -power;
 		oldErr = err;
 		totalErr += err;
-		//writeDebugStreamLine("Err: %d, Deriv: %d, TotalErr: %d, Integral: %d, Power: %d", err,deriv,totalErr,integral,power);
+		writeDebugStreamLine("Err: %d, Deriv: %d, TotalErr: %d, Integral: %d, Power: %d", err,deriv,totalErr,integral,power);
 		wait1Msec(50);
 	}
 }
@@ -172,7 +174,7 @@ task setBaseLiftPosTask()
 		err = desiredBase - SensorValue[baseLiftPoten];
 		power = (int) (err*127/4095*kpBase);
 		setBaseLiftPower(power);
-		writeDebugStreamLine("Poten: %d, Power: %d, Error: %d", SensorValue[baseLiftPoten], power,err);
+		//writeDebugStreamLine("Poten: %d, Power: %d, Error: %d", SensorValue[baseLiftPoten], power,err);
 		wait1Msec(50);
 	}
 	setBaseLiftPower(powAfterBase);
@@ -190,8 +192,20 @@ task setClawUntilPosTask()
 	userControlClaw = true;
 }
 
+task setForkliftPosTask()
+{
+	clearTimer(T4);
+	setForkliftPower(forkliftPos*127);
+	while(SensorValue(forkliftButton) == 1 && time1(T4)<1800){}
+	setForkliftPower(0);
+}
 
 ///////COMPLEX METHODS: a+bi///////
+void setForkliftPos(int aForkPos)
+{
+	forkliftPos = aForkPos;
+	startTask(setForkliftPosTask);
+}
 void driveStraight(int dest, int basePower, float rightMultiplier = 0.58) //uses correctStraight task (with gyro) to dive straight
 {
 	theta = SensorValue[gyro];
@@ -203,7 +217,7 @@ void driveStraight(int dest, int basePower, float rightMultiplier = 0.58) //uses
 	//writeDebugStreamLine("err: %d, power: %d sdfdgdsgfgfsggffs",err,power);
 	while(fabs(err)>20 && fabs(dest - (-1*SensorValue[rightQuad]))>20)
 	{
-		err = dest - SensorValue[leftQuad];
+		err = dest - SensorValue[rightQuad];
 		power = basePower*sgn(err);
 		setRightMotors((int)(power*rightMultiplier + rightPowerAdjustment));
 		setLeftMotors((int) (power+leftPowerAdjustment));
@@ -262,7 +276,7 @@ task autoScoreTask()
 	//writeDebugStreamLine("cones stacked when in method: %d, baseLiftPos: %d", conesStacked);
 	//writeDebugStreamLine(" baseLiftPos: %d", 	baseLiftPositions[conesStacked]);
 	setBaseLiftPos(baseLiftPositions[conesStacked],SCORE_KP_BASE);
-	writeDebugStreamLine("must be less than this level: %d", baseLiftPositions[conesStacked] - potenConstant - ERR_MARGIN);
+	//writeDebugStreamLine("must be less than this level: %d", baseLiftPositions[conesStacked] - potenConstant - ERR_MARGIN);
 	while(SensorValue[baseLiftPoten] > baseLiftPositions[conesStacked] + potenConstant + ERR_MARGIN){}
 	setTopLiftPos(SCORE_TOP,SCORE_KP_TOP);
 	conesStacked++;

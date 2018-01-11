@@ -1,15 +1,13 @@
-#pragma config(Sensor, in1,    baseLiftPoten,  sensorPotentiometer)
-#pragma config(Sensor, in2,    topLiftPoten,   sensorPotentiometer)
+#pragma config(Sensor, in1,    topLiftPoten,   sensorPotentiometer)
+#pragma config(Sensor, in2,    baseLiftPoten,  sensorPotentiometer)
 #pragma config(Sensor, in4,    gyro,           sensorGyro)
-#pragma config(Sensor, dgtl1,  leftQuad,       sensorQuadEncoder)
-#pragma config(Sensor, dgtl3,  rightQuad,      sensorQuadEncoder)
+#pragma config(Sensor, dgtl1,  rightQuad,      sensorQuadEncoder)
 #pragma config(Sensor, dgtl5,  forkliftButton, sensorDigitalIn)
 #pragma config(Sensor, dgtl7,  centerPiston,   sensorDigitalOut)
 #pragma config(Sensor, dgtl8,  redLED,         sensorLEDtoVCC)
 #pragma config(Sensor, dgtl9,  yellowLED,      sensorLEDtoVCC)
 #pragma config(Sensor, dgtl10, greenLED,       sensorLEDtoVCC)
-#pragma config(Sensor, dgtl11, leftPiston,     sensorDigitalOut)
-#pragma config(Sensor, dgtl12, rightPiston,    sensorDigitalOut)
+#pragma config(Sensor, dgtl11, leftQuad,       sensorQuadEncoder)
 #pragma config(Motor,  port1,           claw,          tmotorVex393_HBridge, openLoop)
 #pragma config(Motor,  port2,           topLiftLeft,   tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port3,           topLiftRight,  tmotorVex393_MC29, openLoop)
@@ -54,14 +52,15 @@ void runBasicCompAuton(string majorSide, int minorSide, int zone)
 	reachedMobileGoal = false; //will act as hard stop for lifting cone â?? when reachedMobileGoal is true, the lift will immediately drop
 
 	//Go to mobile goal â Drop mobile base lift, lift cone, and drive straight
-	setForkliftPower(0);
-	setTopLiftPos(BACK_TOP,7,-15);
+	setForkliftPos(FORKLIFT_DOWN);
+	//setTopLiftPos(BACK_TOP,7,-15);  //UNCOMMENT ONCE POTEN IS ON LIFT
 	driveStraight(1600,127); //drive to mobile goal
 
 	//pick up goal
 	reachedMobileGoal = true; //force cone lift to drop
-	setForkliftPower(1); //pick up goal
-	setTopLiftPos(SCORE_TOP + 150, 7, -15); //+300 quick fix for wrong enum after pot swap
+	//setForkliftPower(1); //pick up goal
+		setForkliftPos(FORKLIFT_UP);
+	//setTopLiftPos(SCORE_TOP + 150, 7, -15); //+300 quick fix for wrong enum after pot swap //UNCOMMENT AFTER FIX
 	wait1Msec(300);
 
 	//drive back
@@ -87,23 +86,77 @@ void runBasicCompAuton(string majorSide, int minorSide, int zone)
 		turnToPos(-2245*minorSide);
 		driveStraight(700,127);
 	}
+	else if(zone == 20)
+	{
+		//turn roughly parallel to white line, drive forward a bit, turn fully to face 10 pt zone, then drive straight
+		turnToPos(-1315*minorSide);
+		driveStraight(400,127);
+		//turnDeg(250);
+		turnToPos(-2245*minorSide);
+		driveStraight(700,127);
+	}
 	//setClawPower(-127);
-	wait1Msec(250);
-	setTopLiftPos(3100,7,-15);
-	wait1Msec(150);
+	//wait1Msec(250);
+	//setTopLiftPos(3100,7,-15);
+	//wait1Msec(150);
 	//wait1Msec(250);
 
 	//Score cone and back away
 	setClawPower(127);
 	//moved earlier
 	setBaseLiftPos(3850, 7); //lift up cone â?? possibly change this to not go back all the way (potentially wasting time in driver control)
-	setForkliftPower(0);
+		setForkliftPos(FORKLIFT_DOWN);
 	wait1Msec(500);
 	setClawPower(0);
 	driveStraight(-800,127,1);
 	wait1Msec(250);
 	setTopLiftPower(0);
 	writeDebugStreamLine("Time: %d", time1(T1));
+}
+
+void runProgSkills()
+{
+	//run auton to score in 20Z
+		string blank = "";
+		runBasicCompAuton(blank,1,20);
+	//reset to left?
+			//run low power forward?
+			//turn w/ gyro to back into left wall
+			//back into wall
+	//drive to near left corner and score in 10Z left
+			//drive to correct spot to align with goal
+			//turn w/ gyro
+			//drive forward and pick up goal
+			//turn 180 to face scoring spot
+			//drive forward
+			//score 10Z
+	//drive to near right corner and score in 10Z right
+			//turn
+			//drive forward until aligned
+			//turn
+			//drive forward and pick up goal
+			//turn 180 to face scoring spot
+			//drive forward
+			//score 10Z
+	//drive to far right corner and score in 10Z middle
+			//turn 180
+			//drive forward and pick up goal
+			//turn 180
+			//drive forward until 5Z
+			//turn
+			//drive
+			//turn to center
+			//score goal in 10Z
+	//drive to far left corner and score in far 20Z
+			//turn to left
+			//drive until aligned
+			//turn until aligned
+			//drive forward and pick up goal
+			//drive forward
+			//turn
+			//drive
+			//turn to 20Z
+			//score in 20Z
 }
 
 task autonomous()
@@ -115,6 +168,11 @@ task autonomous()
 	//runProgSkills(side);
 }
 
+void testingSpeed()
+{
+	clearTimer(T1);
+
+}
 task usercontrol()
 {
 	bool coneUpPressed = false;
@@ -124,17 +182,18 @@ task usercontrol()
 
 	while(true)
 	{
-		//if(vexRT[Btn7L]==1)
-		//{
-		//	string side = "blue";
-		//	runBasicCompAuton(side,1,10);
-		//	writeDebugStreamLine("Running basic comp auton");
-		//}
+		if(vexRT[Btn7L]==1)
+		{
+			string side = "blue";
+			runBasicCompAuton(side,1,5);
+			writeDebugStreamLine("Running basic comp auton");
+		}
 		//if(vexRT[Btn7R]==1)
 		//{
 		//	string side = "blue";
 		//	runProgSkills();
 		//}
+
 		//Buttons and Joysticks
 		int  rightJoy = vexRT[Ch2];
 		int  leftJoy = vexRT[Ch3];
@@ -166,7 +225,7 @@ task usercontrol()
 			setLeftMotors(0);
 
 
-		//Lift Motors
+		//TOP LIFT
 		if(rightTriggerUp == 1)
 		{
 			setTopLiftPower(127);
@@ -177,22 +236,10 @@ task usercontrol()
 			setTopLiftPower(-80);
 			//setTopLiftPos(BACK_TOP,BACK_KP_TOP);
 		}
-		/*
-		else if(btnSevenUp == 1)
+		else
 		{
-		setClawUntilPos(MATCHLOAD_CLAW,80);
-		setTopLiftPos(MATCHLOAD,MATCHLOAD_KP);
+			setTopLiftPower(0);
 		}
-		else if(btnSevenDown == 1)
-		{
-		setClawUntilPos(BACK_CLAW,80);
-		setTopLiftPos(BACK,BACK_KP);
-		}
-		*/
-		//else
-		//{
-		//	setTopLiftPower(0);
-		//}
 
 		//BASE LIFT
 		if(btnEightUp == 1)
@@ -228,13 +275,6 @@ task usercontrol()
 			setForkliftPower(-127);
 		else
 			setForkliftPower(0);
-		/*
-		if(centerPushed)
-		{
-		SensorValue(centerPiston) = 0;
-		centerPushed = false;
-		}
-		*/ //might get caught while withdrawing? task? refuse to go up or down while extended? good idea poor execution?
 
 		if(btnSevenRight == 1 && !centerPushed)
 		{
