@@ -52,6 +52,7 @@ void runBasicCompAuton(string majorSide, int minorSide, int zone)
 	reachedMobileGoal = false; //will act as hard stop for lifting cone â?? when reachedMobileGoal is true, the lift will immediately drop
 
 	//Go to mobile goal â Drop mobile base lift, lift cone, and drive straight
+	setBaseLiftPos(3900, 10);
 	setForkliftPos(FORKLIFT_DOWN);
 	//setTopLiftPos(BACK_TOP,7,-15);  //UNCOMMENT ONCE POTEN IS ON LIFT
 	driveStraight(1600,127); //drive to mobile goal
