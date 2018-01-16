@@ -3,7 +3,6 @@
 #pragma config(Sensor, in4,    gyro,           sensorGyro)
 #pragma config(Sensor, dgtl1,  rightQuad,      sensorQuadEncoder)
 #pragma config(Sensor, dgtl5,  forkliftButton, sensorDigitalIn)
-#pragma config(Sensor, dgtl7,  centerPiston,   sensorDigitalOut)
 #pragma config(Sensor, dgtl8,  redLED,         sensorLEDtoVCC)
 #pragma config(Sensor, dgtl9,  yellowLED,      sensorLEDtoVCC)
 #pragma config(Sensor, dgtl10, greenLED,       sensorLEDtoVCC)
@@ -27,11 +26,11 @@
 ////GLOBAL VARIABLES////
 //Poten Values For Lift -- Values increase as lift moves backwards
 enum ForkliftPos {FORKLIFT_UP=1,FORKLIFT_DOWN=-1};
-enum PotenValuesTop {BACK_TOP = 1000, UPRIGHT_TOP = 2508, MATCHLOAD_TOP = 580, SCORE_TOP = 4095};
+enum PotenValuesTop {BACK_TOP = 500, UPRIGHT_TOP = 2008, MATCHLOAD_TOP = 580, SCORE_TOP = 3000};
 enum PotenValuesClaw {BACK_CLAW = 3700, MATCHLOAD_CLAW = 750};
-enum PotenValuesBase {BACK_BASE = 3875, MATCHLOAD_BASE = 3200, HIGHEST_BASE =  2608}; //values increase as lift moves down
-int baseLiftPositions[12] = {3980,3980,3750,3700,3500,3350,3100,3400,3300,3250,2695,2525};
-int topLiftPositions[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
+enum PotenValuesBase {BACK_BASE = 4095, MATCHLOAD_BASE = 3200, HIGHEST_BASE =  2608}; //values increase as lift moves down
+int topLiftPositions[12] = {3700,2600,2775,2500,4000,4000,4000,4000,4000,4000,4000,4000};
+int baseLiftPositions[12] = {3600,3950,3500,3180,3500,3350,3100,3400,3300,3250,2695,2525};
 
 /*base
 back = 3980
@@ -148,7 +147,7 @@ task correctStraight()
 task setTopLiftPosTask() //reachedMobileGoal is only used in auton to stop and hold lift in place if robot reaches goal unexpectedly early
 {
 	bool ignore = false;
-	if((desiredTop == BACK_TOP && SensorValue[topLiftPoten]<BACK_TOP) || reachedMobileGoal) //1000 = BACK value
+	if((desiredTop == BACK_TOP && SensorValue[topLiftPoten]<BACK_TOP) || reachedMobileGoal)
 		ignore = true;
 	int err = desiredTop - SensorValue[topLiftPoten];
 	int power = 127;
@@ -156,9 +155,9 @@ task setTopLiftPosTask() //reachedMobileGoal is only used in auton to stop and h
 	while(abs(err)>200 &&  !ignore) //adjust power of motors while error is outide of certain range, then set power to 0
 	{
 		err = desiredTop - SensorValue[topLiftPoten];
-		power = (int) (err*127/4095*kpTop);
+		power = (int) (-err*127/4095*kpTop);
 		setTopLiftPower(power);
-		//writeDebugStreamLine("Poten: %d, Power: %d, Error: %d", SensorValue[topLiftPoten], power,err);
+		writeDebugStreamLine("Desired: %d, Poten: %d, Power: %d, Error: %d", desiredTop, SensorValue[topLiftPoten], power,err);
 		wait1Msec(50);
 	}
 	//writeDebugStreamLine("Moving to powAfter");
@@ -276,11 +275,12 @@ void setClawUntilPos(int aDesiredClaw, int aClawPower)
 task autoScoreTask()
 {
     int topLiftStart = 100*topLiftPositions[conesStacked]; //poten units of base lift corresponing to top lift swing-around time, assuming poten increases towards score (increasing distance == increasing time alloted)
-    //writeDebugStreamLine(" baseLiftPos: %d", 	baseLiftPositions[conesStacked]);
+    //writeDebugStreamLine(" baseLiftPosDesired: %d", 	baseLiftPositions[conesStacked]);
 	setBaseLiftPos(baseLiftPositions[conesStacked],SCORE_KP_BASE);
 	//writeDebugStreamLine("must be less than this level: %d", baseLiftPositions[conesStacked] - topLiftStart - ERR_MARGIN);
     while(SensorValue[baseLiftPoten] > baseLiftPositions[conesStacked] + topLiftStart + ERR_MARGIN){wait1Msec(20);} //assuming poten decreases towards up
 	setTopLiftPos(topLiftPositions[conesStacked],SCORE_KP_TOP);
+	//while(SensorValue[topLiftPoten] < topLiftPositions[conesStacked] - ERR_MARGIN || SensorValue[baseLiftPoten] > baseLiftPositions[conesStacked] + ERR_MARGIN){wait1Msec(50);}
 	conesStacked++;
 }
 
@@ -288,7 +288,7 @@ task autoBackTask()
 {
 	userControlClaw = false;
 	if(SensorValue[topLiftPoten]>UPRIGHT_TOP)
-		setClawPower(-80); //open claw
+		setClawPower(127); //open claw
 	setTopLiftPos(BACK_TOP,BACK_KP_TOP);
 	while(SensorValue[topLiftPoten]>UPRIGHT_TOP){}
 	setBaseLiftPos(BACK_BASE,BACK_KP_BASE,0);
@@ -299,8 +299,10 @@ task autoStackTask()
 {
     int thisConeStack = conesStacked;
     startTask(autoScoreTask);
-    while(SensorValue[baseLiftPoten] > baseLiftPositions[thisConeStack]+ ERR_MARGIN && SensorValue[topLiftPoten] < topLiftPositions[thisConeStack] - ERR_MARGIN){wait1Msec(25);}
+    while(SensorValue[topLiftPoten] < topLiftPositions[conesStacked] - ERR_MARGIN || SensorValue[baseLiftPoten] > baseLiftPositions[conesStacked] + ERR_MARGIN){wait1Msec(50);}
+    wait1Msec(200);
     startTask(autoBackTask);
+
 }
 
 ////AND CORRESPONDING MORE COMPLEX METHODS/////

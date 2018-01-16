@@ -3,7 +3,6 @@
 #pragma config(Sensor, in4,    gyro,           sensorGyro)
 #pragma config(Sensor, dgtl1,  rightQuad,      sensorQuadEncoder)
 #pragma config(Sensor, dgtl5,  forkliftButton, sensorDigitalIn)
-#pragma config(Sensor, dgtl7,  centerPiston,   sensorDigitalOut)
 #pragma config(Sensor, dgtl8,  redLED,         sensorLEDtoVCC)
 #pragma config(Sensor, dgtl9,  yellowLED,      sensorLEDtoVCC)
 #pragma config(Sensor, dgtl10, greenLED,       sensorLEDtoVCC)
@@ -169,17 +168,13 @@ task autonomous()
 	//runProgSkills(side);
 }
 
-void testingSpeed()
-{
-	clearTimer(T1);
-
-}
 task usercontrol()
 {
 	bool coneUpPressed = false;
 	bool coneDownPressed = false;
 	bool coneZeroPressed = false;
 	bool centerPushed = false; //Center piston pushed or naw
+	bool autoStackPressed = false;
 
 	while(true)
 	{
@@ -198,15 +193,14 @@ task usercontrol()
 		//Buttons and Joysticks
 		int  rightJoy = vexRT[Ch2];
 		int  leftJoy = vexRT[Ch3];
-		word rightTriggerUp = vexRT[Btn6U]; //for up top lift
-		word rightTriggerDown = vexRT[Btn6D]; //for down top lift
+		word rightTriggerUp = vexRT[Btn6U]; //for score top lift
+		word rightTriggerDown = vexRT[Btn6D]; //for back top lift
 		word leftTriggerUp = vexRT[Btn5U]; //for pincer close
 		word leftTriggerDown = vexRT[Btn5D]; //for pincer open
 		word btnEightUp = vexRT[Btn8U]; //for up base lift
 		word btnEightDown = vexRT[Btn8D]; //for down base lift
 		word btnSevenUp = vexRT[Btn7U]; //forklift up
 		word btnSevenDown = vexRT[Btn7D]; //forklift down
-		word btnSevenRight = vexRT[Btn7R]; //Pelvic thrust
 		word btnEightLeft = vexRT[Btn8L]; //auto score
 		word btnEightRight = vexRT[Btn8R]; //auto back
 		word btnSevenLeft = vexRT[Btn7L]; //no more auton testing, move to matchloads
@@ -229,18 +223,18 @@ task usercontrol()
 		//TOP LIFT
 		if(rightTriggerUp == 1)
 		{
-			setTopLiftPower(127);
-			//setTopLiftPos(SCORE_TOP,SCORE_KP_TOP);
+			//setTopLiftPower(127);
+			setTopLiftPos(SCORE_TOP,SCORE_KP_TOP);
 		}
 		else if(rightTriggerDown == 1)
 		{
-			setTopLiftPower(-80);
-			//setTopLiftPos(BACK_TOP,BACK_KP_TOP);
+			//setTopLiftPower(-80);
+			setTopLiftPos(BACK_TOP,BACK_KP_TOP);
 		}
-		else
-		{
-			setTopLiftPower(0);
-		}
+		//else
+		//{
+		//	setTopLiftPower(0);
+		//}
 
 		//BASE LIFT
 		if(btnEightUp == 1)
@@ -277,31 +271,19 @@ task usercontrol()
 		else
 			setForkliftPower(0);
 
-		if(btnSevenRight == 1 && !centerPushed)
-		{
-			SensorValue(centerPiston) = 1;
-			centerPushed = true;
-		}
-		else if(btnSevenRight == 1 && centerPushed)
-		{
-			SensorValue(centerPiston) = 0;
-			centerPushed = false;
-		}
-
-
 
 		//claw
 		if(leftTriggerDown == 1)
 		{
 			if(userControlClaw)
-				setClawPower(70); //close claw
+				setClawPower(110); //open claw
 			else
 				userControlClaw = true;
 		}
 		else if(leftTriggerUp == 1)
 		{
 			if(userControlClaw)
-				setClawPower(-70); //open claw
+				setClawPower(-110); //close claw
 			else
 				userControlClaw = true;
 		}
@@ -316,7 +298,7 @@ task usercontrol()
         else if(btnEightRight == 1 && !autoStackPressed) //if button is now pressed, update cones and update bool to reflect button pressed
         {
             autoStackPressed = true;
-            autoScore();
+            autoStack();
             writeDebugStreamLine("Cones Stacked: %d", conesStacked);
         }
         else if(btnEightRight == 0 && autoStackPressed) //if button is no longer pressed, update bool to reflect lack of press
