@@ -312,8 +312,18 @@ task usercontrol()
 		}
 
 		//AUTO METHODS
-		if(btnEightLeft == 1){autoBack();}
-		else if(btnEightRight == 1){autoScore(); writeDebugStreamLine("Cones Stacked: %d", conesStacked);}
+        if(btnEightLeft == 1){autoBack();}
+        else if(btnEightRight == 1 && !autoStackPressed) //if button is now pressed, update cones and update bool to reflect button pressed
+        {
+            autoStackPressed = true;
+            autoScore();
+            writeDebugStreamLine("Cones Stacked: %d", conesStacked);
+        }
+        else if(btnEightRight == 0 && autoStackPressed) //if button is no longer pressed, update bool to reflect lack of press
+        {
+            autoStackPressed = false;
+        }
+
 
 		//if(btnSevenLeft == 1)
 		//{
@@ -329,7 +339,7 @@ task usercontrol()
 		}
 		else if(secondBtnSevenUp == 0 && coneUpPressed) //if button is no longer pressed, update bool to reflect lack of press
 		{
-			coneUpPressed = true;
+			coneUpPressed = false;
 		}
 
 		if(secondBtnSevenDown == 1 && !coneDownPressed) //if button is now pressed, update cones and update bool to reflect button pressed
@@ -339,7 +349,7 @@ task usercontrol()
 		}
 		else if(secondBtnSevenDown == 0 && coneDownPressed) //if button is no longer pressed, update bool to reflect lack of press
 		{
-			coneDownPressed = true;
+			coneDownPressed = false;
 		}
 
 		if(secondBtnSevenLeft == 1 && !coneZeroPressed) //if button is now pressed, update cones and update bool to reflect button pressed
@@ -349,7 +359,7 @@ task usercontrol()
 		}
 		else if(secondBtnSevenLeft == 0 && coneZeroPressed) //if button is no longer pressed, update bool to reflect lack of press
 		{
-			coneZeroPressed = true;
+			coneZeroPressed = false;
 		}
 	}
 }

@@ -31,6 +31,7 @@ enum PotenValuesTop {BACK_TOP = 1000, UPRIGHT_TOP = 2508, MATCHLOAD_TOP = 580, S
 enum PotenValuesClaw {BACK_CLAW = 3700, MATCHLOAD_CLAW = 750};
 enum PotenValuesBase {BACK_BASE = 3875, MATCHLOAD_BASE = 3200, HIGHEST_BASE =  2608}; //values increase as lift moves down
 int baseLiftPositions[12] = {3980,3980,3750,3700,3500,3350,3100,3400,3300,3250,2695,2525};
+int topLiftPositions[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
 
 /*base
 back = 3980
@@ -271,16 +272,15 @@ void setClawUntilPos(int aDesiredClaw, int aClawPower)
 	startTask(setClawUntilPosTask);
 }
 
-/////MORE COMPLEX TASKS///
+/////MORE COMPLEX TASKS - AUTOSTACKING///
 task autoScoreTask()
 {
-	int potenConstant = 100;
-	//writeDebugStreamLine("cones stacked when in method: %d, baseLiftPos: %d", conesStacked);
-	//writeDebugStreamLine(" baseLiftPos: %d", 	baseLiftPositions[conesStacked]);
+    int topLiftStart = 100*topLiftPositions[conesStacked]; //poten units of base lift corresponing to top lift swing-around time, assuming poten increases towards score (increasing distance == increasing time alloted)
+    //writeDebugStreamLine(" baseLiftPos: %d", 	baseLiftPositions[conesStacked]);
 	setBaseLiftPos(baseLiftPositions[conesStacked],SCORE_KP_BASE);
-	//writeDebugStreamLine("must be less than this level: %d", baseLiftPositions[conesStacked] - potenConstant - ERR_MARGIN);
-	while(SensorValue[baseLiftPoten] > baseLiftPositions[conesStacked] + potenConstant + ERR_MARGIN){}
-	setTopLiftPos(SCORE_TOP,SCORE_KP_TOP);
+	//writeDebugStreamLine("must be less than this level: %d", baseLiftPositions[conesStacked] - topLiftStart - ERR_MARGIN);
+    while(SensorValue[baseLiftPoten] > baseLiftPositions[conesStacked] + topLiftStart + ERR_MARGIN){wait1Msec(20);} //assuming poten decreases towards up
+	setTopLiftPos(topLiftPositions[conesStacked],SCORE_KP_TOP);
 	conesStacked++;
 }
 
@@ -295,6 +295,14 @@ task autoBackTask()
 	setClawPower(0); //close claw
 }
 
+task autoStackTask()
+{
+    int thisConeStack = conesStacked;
+    startTask(autoScoreTask);
+    while(SensorValue[baseLiftPoten] > baseLiftPositions[thisConeStack]+ ERR_MARGIN && SensorValue[topLiftPoten] < topLiftPositions[thisConeStack] - ERR_MARGIN){wait1Msec(25);}
+    startTask(autoBackTask);
+}
+
 ////AND CORRESPONDING MORE COMPLEX METHODS/////
 void autoScore()
 {
@@ -305,4 +313,9 @@ void autoScore()
 void autoBack()
 {
 	startTask(autoBackTask);
+}
+
+void autoStack()
+{
+    startTask(autoStackTask);
 }
