@@ -199,7 +199,7 @@ task setForkliftPosTask()
 {
 	clearTimer(T4);
 	setForkliftPower(forkliftPos*127);
-	while(SensorValue(forkliftButton) == 1 && time1(T4)<1800){}
+	while((SensorValue(forkliftButton) == 1 || forkliftPos==FORKLIFT_DOWN) && time1(T4)<1800){}
 	setForkliftPower(0);
 }
 

@@ -51,22 +51,22 @@ void runBasicCompAuton(string majorSide, int minorSide, int zone)
 	reachedMobileGoal = false; //will act as hard stop for lifting cone â?? when reachedMobileGoal is true, the lift will immediately drop
 
 	//Go to mobile goal â Drop mobile base lift, lift cone, and drive straight
-	setBaseLiftPos(3900, 10);
+	setBaseLiftPos(3300, 10);
 	setForkliftPos(FORKLIFT_DOWN);
 	//setTopLiftPos(BACK_TOP,7,-15);  //UNCOMMENT ONCE POTEN IS ON LIFT
-	driveStraight(1600,127); //drive to mobile goal
+	driveStraight(1500,127); //drive to mobile goal
 
 	//pick up goal
 	reachedMobileGoal = true; //force cone lift to drop
 	//setForkliftPower(1); //pick up goal
 		setForkliftPos(FORKLIFT_UP);
 	//setTopLiftPos(SCORE_TOP + 150, 7, -15); //+300 quick fix for wrong enum after pot swap //UNCOMMENT AFTER FIX
-	wait1Msec(300);
+	wait1Msec(700);
 
 	//drive back
 	turnToPos(0);
 	driveStraight(-1200,127); //drive back -1000
-	setClawPower(-127);
+	setClawPower(127);
 	wait1Msec(300);
 	setClawPower(0);
 
@@ -75,22 +75,34 @@ void runBasicCompAuton(string majorSide, int minorSide, int zone)
 	{
 		//just turn around and drive straight
 		turnToPos(-1800*minorSide);
-		driveStraight(400,127);
+		setLeftMotors(127);
+		setRightMotors(0);
+		while(SensorValue[gyro] < -2145 * minorSide) {}
+		setAllDriveMotors(0);
 	}
 	else if(zone == 10)
 	{
+		turnToPos(-1800*minorSide);
+		driveStraight(400,127);
+		setLeftMotors(127);
+		setRightMotors(0);
+		while(SensorValue[gyro] < -2145 * minorSide) {}
+		setAllDriveMotors(0);
+		/*
 		//turn roughly parallel to white line, drive forward a bit, turn fully to face 10 pt zone, then drive straight
 		turnToPos(-1315*minorSide);
 		driveStraight(400,127);
 		//turnDeg(250);
 		turnToPos(-2245*minorSide);
-		driveStraight(700,127);
+		driveStraight(600,127);
+		turnToPos(-2145*minorSide);
+		*/
 	}
 	else if(zone == 20)
 	{
 		//turn roughly parallel to white line, drive forward a bit, turn fully to face 10 pt zone, then drive straight
 		turnToPos(-1315*minorSide);
-		driveStraight(400,127);
+		driveStraight(550,127);
 		//turnDeg(250);
 		turnToPos(-2245*minorSide);
 		driveStraight(700,127);
@@ -102,12 +114,13 @@ void runBasicCompAuton(string majorSide, int minorSide, int zone)
 	//wait1Msec(250);
 
 	//Score cone and back away
-	setClawPower(127);
+	//setClawPower(127);
 	//moved earlier
-	setBaseLiftPos(3850, 7); //lift up cone â?? possibly change this to not go back all the way (potentially wasting time in driver control)
-		setForkliftPos(FORKLIFT_DOWN);
+	setBaseLiftPos(3300, 10); //lift up cone â?? possibly change this to not go back all the way (potentially wasting time in driver control)
 	wait1Msec(500);
-	setClawPower(0);
+	setForkliftPos(FORKLIFT_DOWN);
+	wait1Msec(750);
+	//setClawPower(0);
 	driveStraight(-800,127,1);
 	wait1Msec(250);
 	setTopLiftPower(0);
@@ -191,15 +204,17 @@ task usercontrol()
 		if(vexRT[Btn7L]==1)
 		{
 			string side = "blue";
-			testSpeedStuff();
-			//runBasicCompAuton(side,1,5);
+			//testSpeedStuff();
+			runBasicCompAuton(side,1,20);
+			//setForkliftPos(FORKLIFT_UP);
 			writeDebugStreamLine("Running basic comp auton");
 		}
-		//if(vexRT[Btn7R]==1)
-		//{
-		//	string side = "blue";
-		//	runProgSkills();
-		//}
+		if(vexRT[Btn7R]==1)
+		{
+			string side = "blue";
+			//runProgSkills();
+			setForkliftPos(FORKLIFT_DOWN);
+		}
 
 		//Buttons and Joysticks
 		int  rightJoy = vexRT[Ch2];
@@ -269,18 +284,18 @@ task usercontrol()
 				setBaseLiftPower(0);
 		}
 
-		//Mobile Goal Base Lifters
-		if(btnSevenUp == 1)
-		{
-			if(SensorValue(forkliftButton) == 1)
-				setForkliftPower(127);
-			else
-				setForkliftPower(0);
-		}
-		else if(btnSevenDown == 1)
-			setForkliftPower(-127);
-		else
-			setForkliftPower(0);
+		////Mobile Goal Base Lifters
+		//if(btnSevenUp == 1)
+		//{
+		//	if(SensorValue(forkliftButton) == 1)
+		//		setForkliftPower(127);
+		//	else
+		//		setForkliftPower(0);
+		//}
+		//else if(btnSevenDown == 1)
+		//	setForkliftPower(-127);
+		//else
+		//	setForkliftPower(0);
 
 
 		//claw
