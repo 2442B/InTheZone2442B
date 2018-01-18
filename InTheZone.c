@@ -36,7 +36,7 @@ void pre_auton()
 	wait1Msec(1000);
 	SensorType[in4] = sensorGyro;
 	wait1Msec(2000);
-	SensorScale[in4] = 137;
+	SensorScale[in4] = 133;
 	writeDebugStreamLine("finished gyro init %d", SensorScale[in4]);
 	SensorValue[redLED] = 0;
 	SensorValue[greenLED] = 1;
@@ -44,37 +44,46 @@ void pre_auton()
 
 
 }
-void runBasicCompAuton(string majorSide, int minorSide, int zone)
+string majorSide;
+int minorSide;
+int zone;
+task runBasicCompAuton()
 {
 	//minorSide: 1 = left, -1 = right, majorSide parameter not used yet
 	clearTimer(T1);
 	reachedMobileGoal = false; //will act as hard stop for lifting cone â?? when reachedMobileGoal is true, the lift will immediately drop
 
 	//Go to mobile goal â Drop mobile base lift, lift cone, and drive straight
-	setBaseLiftPos(3300, 10);
+	setBaseLiftPos(3200, 20);
 	setForkliftPos(FORKLIFT_DOWN);
+	wait1Msec(500);
 	//setTopLiftPos(BACK_TOP,7,-15);  //UNCOMMENT ONCE POTEN IS ON LIFT
-	driveStraight(1500,127); //drive to mobile goal
+	driveStraight(1370,127); //drive to mobile goal
 
 	//pick up goal
 	reachedMobileGoal = true; //force cone lift to drop
 	//setForkliftPower(1); //pick up goal
 		setForkliftPos(FORKLIFT_UP);
 	//setTopLiftPos(SCORE_TOP + 150, 7, -15); //+300 quick fix for wrong enum after pot swap //UNCOMMENT AFTER FIX
-	wait1Msec(700);
+	while(SensorValue[forkliftButton] == 1){wait1Msec(20);}
+	setForkliftPower(FORKLIFT_UP * 80);
+	wait1Msec(300);
+	setForkliftPower(0);
 
 	//drive back
 	turnToPos(0);
+	setBaseLiftPos(3300, 10);
 	driveStraight(-1200,127); //drive back -1000
 	setClawPower(127);
-	wait1Msec(300);
-	setClawPower(0);
+	wait1Msec(500);
+	setBaseLiftPos(3200, 10);
 
 	//Score goal
 	if(zone == 5)
 	{
 		//just turn around and drive straight
 		turnToPos(-1800*minorSide);
+			setClawPower(0);
 		setLeftMotors(127);
 		setRightMotors(0);
 		while(SensorValue[gyro] < -2145 * minorSide) {}
@@ -83,11 +92,19 @@ void runBasicCompAuton(string majorSide, int minorSide, int zone)
 	else if(zone == 10)
 	{
 		turnToPos(-1800*minorSide);
-		driveStraight(400,127);
-		setLeftMotors(127);
-		setRightMotors(0);
-		while(SensorValue[gyro] < -2145 * minorSide) {}
+			setClawPower(0);
+		//driveStraight(400,127);
+		if(minorSide == 1){
+				setLeftMotors(127);
+				setRightMotors(0);}
+		else
+		{
+				setLeftMotors(0);
+				setRightMotors(127);
+		}
+		while(fabs(SensorValue[gyro]) < 2200) {}
 		setAllDriveMotors(0);
+		//driveStraight(50,127);
 		/*
 		//turn roughly parallel to white line, drive forward a bit, turn fully to face 10 pt zone, then drive straight
 		turnToPos(-1315*minorSide);
@@ -101,28 +118,17 @@ void runBasicCompAuton(string majorSide, int minorSide, int zone)
 	else if(zone == 20)
 	{
 		//turn roughly parallel to white line, drive forward a bit, turn fully to face 10 pt zone, then drive straight
-		turnToPos(-1315*minorSide);
-		driveStraight(550,127);
+		turnToPos(-1320*minorSide);
+			setClawPower(0);
+		driveStraight(300,127);
 		//turnDeg(250);
 		turnToPos(-2245*minorSide);
-		driveStraight(700,127);
+		driveStraight(450,127);
 	}
-	//setClawPower(-127);
-	//wait1Msec(250);
-	//setTopLiftPos(3100,7,-15);
-	//wait1Msec(150);
-	//wait1Msec(250);
-
-	//Score cone and back away
-	//setClawPower(127);
-	//moved earlier
-	setBaseLiftPos(3300, 10); //lift up cone â?? possibly change this to not go back all the way (potentially wasting time in driver control)
-	wait1Msec(500);
 	setForkliftPos(FORKLIFT_DOWN);
-	wait1Msec(750);
+		wait1Msec(1100);
 	//setClawPower(0);
-	driveStraight(-800,127,1);
-	wait1Msec(250);
+	driveStraight(-500,127,1);
 	setTopLiftPower(0);
 	writeDebugStreamLine("Time: %d", time1(T1));
 }
@@ -131,7 +137,7 @@ void runProgSkills()
 {
 	//run auton to score in 20Z
 		string blank = "";
-		runBasicCompAuton(blank,1,20);
+		//runBasicCompAuton(blank,1,20);
 	//reset to left?
 			//run low power forward?
 			//turn w/ gyro to back into left wall
@@ -174,10 +180,14 @@ void runProgSkills()
 
 task autonomous()
 {
-	string majorSide = "blue";
-	int minorSide = 1; //1 = left, -1 = right
-	int zone = 10; //choose 5 or 10
-	runBasicCompAuton(majorSide,minorSide,zone);
+	majorSide = "blue";
+	minorSide = 1; //1 = left, -1 = right
+	zone = 20; //choose 5 or 10
+	clearTimer(T3);
+startTask(runBasicCompAuton);
+	while(time1(T3)<15000){wait1Msec(20);}
+	stopTask(runBasicCompAuton);
+	setAllDriveMotors(0);
 	//runProgSkills(side);
 }
 void testSpeedStuff()
@@ -205,7 +215,7 @@ task usercontrol()
 		{
 			string side = "blue";
 			//testSpeedStuff();
-			runBasicCompAuton(side,1,20);
+			//runBasicCompAuton(side,1,20);
 			//setForkliftPos(FORKLIFT_UP);
 			writeDebugStreamLine("Running basic comp auton");
 		}
@@ -284,18 +294,18 @@ task usercontrol()
 				setBaseLiftPower(0);
 		}
 
-		////Mobile Goal Base Lifters
-		//if(btnSevenUp == 1)
-		//{
-		//	if(SensorValue(forkliftButton) == 1)
-		//		setForkliftPower(127);
-		//	else
-		//		setForkliftPower(0);
-		//}
-		//else if(btnSevenDown == 1)
-		//	setForkliftPower(-127);
-		//else
-		//	setForkliftPower(0);
+		//Mobile Goal Base Lifters
+		if(btnSevenUp == 1)
+		{
+			if(SensorValue(forkliftButton) == 1)
+				setForkliftPower(127);
+			else
+				setForkliftPower(0);
+		}
+		else if(btnSevenDown == 1)
+			setForkliftPower(-127);
+		else
+			setForkliftPower(0);
 
 
 		//claw

@@ -175,7 +175,7 @@ task setBaseLiftPosTask()
 	while(abs(err)>ERR_MARGIN) //adjust power of motors while error is outide of certain range, then set power to 0
 	{
 		err = desiredBase - SensorValue[baseLiftPoten];
-		power = sgn(err)*127;//(int) (err*127/2000*kpBase);
+		power = (int) (err*127/2000*kpBase);
 		setBaseLiftPower(power);
 		//writeDebugStreamLine("Poten: %d, Power: %d, Error: %d", SensorValue[baseLiftPoten], power,err);
 		wait1Msec(50);
