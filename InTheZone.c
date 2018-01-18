@@ -167,6 +167,16 @@ task autonomous()
 	runBasicCompAuton(majorSide,minorSide,zone);
 	//runProgSkills(side);
 }
+void testSpeedStuff()
+{
+	setTopLiftPos(SCORE_TOP,SCORE_KP_TOP);
+	setBaseLiftPower(-127);
+	while(SensorValue[topLiftPoten] < SCORE_TOP){wait1Msec(20);}
+	setBaseLiftPower(0);
+	float baseChange = 4095 - SensorValue[baseLiftPoten];
+	float topChange = SensorValue[topLiftPoten];
+	writeDebugStreamLine("BasePoten per Top Poten: %d", baseChange/topChange);
+}
 
 task usercontrol()
 {
@@ -181,7 +191,8 @@ task usercontrol()
 		if(vexRT[Btn7L]==1)
 		{
 			string side = "blue";
-			runBasicCompAuton(side,1,5);
+			testSpeedStuff();
+			//runBasicCompAuton(side,1,5);
 			writeDebugStreamLine("Running basic comp auton");
 		}
 		//if(vexRT[Btn7R]==1)
