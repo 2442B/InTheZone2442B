@@ -56,24 +56,38 @@ task runBasicCompAuton()
 	//Go to mobile goal â Drop mobile base lift, lift cone, and drive straight
 	setBaseLiftPos(3200, 20);
 	setForkliftPos(FORKLIFT_DOWN);
-	wait1Msec(500);
+	//wait1Msec(500);
 	//setTopLiftPos(BACK_TOP,7,-15);  //UNCOMMENT ONCE POTEN IS ON LIFT
-	driveStraight(1370,127); //drive to mobile goal
+	driveStraight(1320,127); //drive to mobile goal
 
 	//pick up goal
 	reachedMobileGoal = true; //force cone lift to drop
 	//setForkliftPower(1); //pick up goal
-		setForkliftPos(FORKLIFT_UP);
+	setForkliftPos(FORKLIFT_UP);
 	//setTopLiftPos(SCORE_TOP + 150, 7, -15); //+300 quick fix for wrong enum after pot swap //UNCOMMENT AFTER FIX
 	while(SensorValue[forkliftButton] == 1){wait1Msec(20);}
 	setForkliftPower(FORKLIFT_UP * 80);
 	wait1Msec(300);
 	setForkliftPower(0);
 
+	if(zone==20)
+	{
+		turnToPos(minorSide*200);
+		driveStraight(-1600,127);
+	}
+	else if(zone == 10)
+	{
 	//drive back
 	turnToPos(0);
 	setBaseLiftPos(3300, 10);
 	driveStraight(-1200,127); //drive back -1000
+}
+else
+{
+	turnToPos(0);
+	setBaseLiftPos(3300, 10);
+	driveStraight(-750,127); //drive back -1000
+}
 	setClawPower(127);
 	wait1Msec(500);
 	setBaseLiftPos(3200, 10);
@@ -83,7 +97,7 @@ task runBasicCompAuton()
 	{
 		//just turn around and drive straight
 		turnToPos(-1800*minorSide);
-			setClawPower(0);
+		setClawPower(0);
 		setLeftMotors(127);
 		setRightMotors(0);
 		while(SensorValue[gyro] < -2145 * minorSide) {}
@@ -92,41 +106,35 @@ task runBasicCompAuton()
 	else if(zone == 10)
 	{
 		turnToPos(-1800*minorSide);
-			setClawPower(0);
+		setClawPower(0);
 		//driveStraight(400,127);
 		if(minorSide == 1){
-				setLeftMotors(127);
-				setRightMotors(0);}
+			setLeftMotors(127);
+			setRightMotors(0);}
 		else
 		{
-				setLeftMotors(0);
-				setRightMotors(127);
+			setLeftMotors(0);
+			setRightMotors(127);
 		}
 		while(fabs(SensorValue[gyro]) < 2200) {}
 		setAllDriveMotors(0);
-		//driveStraight(50,127);
-		/*
-		//turn roughly parallel to white line, drive forward a bit, turn fully to face 10 pt zone, then drive straight
-		turnToPos(-1315*minorSide);
-		driveStraight(400,127);
-		//turnDeg(250);
-		turnToPos(-2245*minorSide);
-		driveStraight(600,127);
-		turnToPos(-2145*minorSide);
-		*/
 	}
 	else if(zone == 20)
 	{
-		//turn roughly parallel to white line, drive forward a bit, turn fully to face 10 pt zone, then drive straight
-		turnToPos(-1320*minorSide);
-			setClawPower(0);
-		driveStraight(300,127);
-		//turnDeg(250);
-		turnToPos(-2245*minorSide);
-		driveStraight(450,127);
+		////turn roughly parallel to white line, drive forward a bit, turn fully to face 10 pt zone, then drive straight
+		//turnToPos(-1320*minorSide);
+		//setClawPower(0);
+		//driveStraight(300,127);
+
+		turnToPos(1270*minorSide);
+		driveStraight(550,127);
 	}
+}
+
+task runEndAuton()
+{
 	setForkliftPos(FORKLIFT_DOWN);
-		wait1Msec(1100);
+	wait1Msec(1100);
 	//setClawPower(0);
 	driveStraight(-500,127,1);
 	setTopLiftPower(0);
@@ -136,73 +144,64 @@ task runBasicCompAuton()
 void runProgSkills()
 {
 	//run auton to score in 20Z
-		string blank = "";
-		//runBasicCompAuton(blank,1,20);
+	string blank = "";
+	//runBasicCompAuton(blank,1,20);
 	//reset to left?
-			//run low power forward?
-			//turn w/ gyro to back into left wall
-			//back into wall
+	//run low power forward?
+	//turn w/ gyro to back into left wall
+	//back into wall
 	//drive to near left corner and score in 10Z left
-			//drive to correct spot to align with goal
-			//turn w/ gyro
-			//drive forward and pick up goal
-			//turn 180 to face scoring spot
-			//drive forward
-			//score 10Z
+	//drive to correct spot to align with goal
+	//turn w/ gyro
+	//drive forward and pick up goal
+	//turn 180 to face scoring spot
+	//drive forward
+	//score 10Z
 	//drive to near right corner and score in 10Z right
-			//turn
-			//drive forward until aligned
-			//turn
-			//drive forward and pick up goal
-			//turn 180 to face scoring spot
-			//drive forward
-			//score 10Z
+	//turn
+	//drive forward until aligned
+	//turn
+	//drive forward and pick up goal
+	//turn 180 to face scoring spot
+	//drive forward
+	//score 10Z
 	//drive to far right corner and score in 10Z middle
-			//turn 180
-			//drive forward and pick up goal
-			//turn 180
-			//drive forward until 5Z
-			//turn
-			//drive
-			//turn to center
-			//score goal in 10Z
+	//turn 180
+	//drive forward and pick up goal
+	//turn 180
+	//drive forward until 5Z
+	//turn
+	//drive
+	//turn to center
+	//score goal in 10Z
 	//drive to far left corner and score in far 20Z
-			//turn to left
-			//drive until aligned
-			//turn until aligned
-			//drive forward and pick up goal
-			//drive forward
-			//turn
-			//drive
-			//turn to 20Z
-			//score in 20Z
+	//turn to left
+	//drive until aligned
+	//turn until aligned
+	//drive forward and pick up goal
+	//drive forward
+	//turn
+	//drive
+	//turn to 20Z
+	//score in 20Z
 }
 
 task autonomous()
 {
 	majorSide = "blue";
-	minorSide = 1; //1 = left, -1 = right
-	zone = 20; //choose 5 or 10
+	minorSide = -1; //1 = left, -1 = right
+	zone = 5; //choose 5 or 10
 	clearTimer(T3);
-startTask(runBasicCompAuton);
-	while(time1(T3)<15000){wait1Msec(20);}
+	startTask(runBasicCompAuton);
+	while(time1(T3)<12500){wait1Msec(20);}
 	stopTask(runBasicCompAuton);
-	setAllDriveMotors(0);
+	startTask(runEndAuton);
 	//runProgSkills(side);
-}
-void testSpeedStuff()
-{
-	setTopLiftPos(SCORE_TOP,SCORE_KP_TOP);
-	setBaseLiftPower(-127);
-	while(SensorValue[topLiftPoten] < SCORE_TOP){wait1Msec(20);}
-	setBaseLiftPower(0);
-	float baseChange = 4095 - SensorValue[baseLiftPoten];
-	float topChange = SensorValue[topLiftPoten];
-	writeDebugStreamLine("BasePoten per Top Poten: %d", baseChange/topChange);
 }
 
 task usercontrol()
 {
+	stopTask(runEndAuton);
 	bool coneUpPressed = false;
 	bool coneDownPressed = false;
 	bool coneZeroPressed = false;
@@ -219,12 +218,12 @@ task usercontrol()
 			//setForkliftPos(FORKLIFT_UP);
 			writeDebugStreamLine("Running basic comp auton");
 		}
-		if(vexRT[Btn7R]==1)
-		{
-			string side = "blue";
-			//runProgSkills();
-			setForkliftPos(FORKLIFT_DOWN);
-		}
+		//if(vexRT[Btn7R]==1)
+		//{
+		//	string side = "blue";
+		//	//runProgSkills();
+		//	setForkliftPos(FORKLIFT_DOWN);
+
 
 		//Buttons and Joysticks
 		int  rightJoy = vexRT[Ch2];
@@ -239,7 +238,8 @@ task usercontrol()
 		word btnSevenDown = vexRT[Btn7D]; //forklift down
 		word btnEightLeft = vexRT[Btn8L]; //auto score
 		word btnEightRight = vexRT[Btn8R]; //auto back
-		word btnSevenLeft = vexRT[Btn7L]; //no more auton testing, move to matchloads
+		word btnSevenLeft = vexRT[Btn7L]; //auton testing
+		word btnSevenRight = vexRT[Btn7R]; //move to matchloads
 		word secondBtnSevenUp = vexRT[Btn7UXmtr2]; //+1 to cone count
 		word secondBtnSevenDown = vexRT[Btn7DXmtr2]; //-1 to cone count
 		word secondBtnSevenLeft = vexRT[Btn7LXmtr2]; //zero cone count
@@ -330,24 +330,25 @@ task usercontrol()
 		}
 
 		//AUTO METHODS
-        if(btnEightLeft == 1){autoBack();}
-        else if(btnEightRight == 1 && !autoStackPressed) //if button is now pressed, update cones and update bool to reflect button pressed
-        {
-            autoStackPressed = true;
-            autoStack();
-            writeDebugStreamLine("Cones Stacked: %d", conesStacked);
-        }
-        else if(btnEightRight == 0 && autoStackPressed) //if button is no longer pressed, update bool to reflect lack of press
-        {
-            autoStackPressed = false;
-        }
+
+		if(btnSevenRight == 1)
+		{
+			setBaseLiftPos(MATCHLOAD_BASE,MATCHLOAD_KP_BASE);
+			setTopLiftPos(MATCHLOAD_TOP,MATCHLOAD_KP_TOP);
+		}
 
 
-		//if(btnSevenLeft == 1)
-		//{
-		//	setBaseLiftPos(MATCHLOAD_BASE,MATCHLOAD_KP_BASE);
-		//	setTopLiftPos(MATCHLOAD_TOP,MATCHLOAD_KP_TOP);
-		//}
+		if(btnEightLeft == 1){autoBack();}
+		else if(btnEightRight == 1 && !autoStackPressed) //if button is now pressed, update cones and update bool to reflect button pressed
+		{
+			autoStackPressed = true;
+			autoStack();
+			writeDebugStreamLine("Cones Stacked: %d", conesStacked);
+		}
+		else if(btnEightRight == 0 && autoStackPressed) //if button is no longer pressed, update bool to reflect lack of press
+		{
+			autoStackPressed = false;
+		}
 
 		//cone count
 		if(secondBtnSevenUp == 1 && !coneUpPressed) //if button is now pressed, update cones and update bool to reflect button pressed
