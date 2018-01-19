@@ -3,9 +3,10 @@
 #pragma config(Sensor, in4,    gyro,           sensorGyro)
 #pragma config(Sensor, dgtl1,  rightQuad,      sensorQuadEncoder)
 #pragma config(Sensor, dgtl5,  forkliftButton, sensorDigitalIn)
-#pragma config(Sensor, dgtl8,  redLED,         sensorLEDtoVCC)
-#pragma config(Sensor, dgtl9,  yellowLED,      sensorLEDtoVCC)
-#pragma config(Sensor, dgtl10, greenLED,       sensorLEDtoVCC)
+#pragma config(Sensor, dgtl6,  greenLED,       sensorLEDtoVCC)
+#pragma config(Sensor, dgtl7,  sideToggle,     sensorDigitalIn)
+#pragma config(Sensor, dgtl8,  minorZoneToggle, sensorDigitalIn)
+#pragma config(Sensor, dgtl9,  majorZoneToggle, sensorDigitalIn)
 #pragma config(Sensor, dgtl11, leftQuad,       sensorQuadEncoder)
 #pragma config(Motor,  port1,           claw,          tmotorVex393_HBridge, openLoop)
 #pragma config(Motor,  port2,           topLiftLeft,   tmotorVex393_MC29, openLoop)
@@ -28,9 +29,13 @@
 #include "Vex_Competition_Includes.c"
 #include "\InTheZoneLibrary.c"
 
+//for auton task
+string majorSide;
+int minorSide;
+int zone;
+
 void pre_auton()
 {
-	SensorValue[redLED] = 1;
 	writeDebugStreamLine("begin gyro init");
 	SensorType[in4] = sensorNone;
 	wait1Msec(1000);
@@ -38,15 +43,26 @@ void pre_auton()
 	wait1Msec(2000);
 	SensorScale[in4] = 133;
 	writeDebugStreamLine("finished gyro init %d", SensorScale[in4]);
-	SensorValue[redLED] = 0;
-	SensorValue[greenLED] = 1;
+
+	majorSide = "blue";
+
+	if(sideToggle == 1) //if empty (1), then side is left (1), else side is right (-1)
+		minorSide = 1;
+	else
+		minorSide = -1;
+
+	if(majorZoneToggle == 0) //if jumper is in (0), zone is 20
+		zone = 20;
+	else if(minorZoneToggle == 1) //if empty (and majorZone is empty), zone is 10, else 5
+		zone = 10;
+	else
+		zone = 5;
 	//white line -- -1315
 
+	SensorValue[greenLED] = 1;
 
 }
-string majorSide;
-int minorSide;
-int zone;
+
 task runBasicCompAuton()
 {
 	//minorSide: 1 = left, -1 = right, majorSide parameter not used yet
@@ -188,9 +204,9 @@ void runProgSkills()
 
 task autonomous()
 {
-	majorSide = "blue";
-	minorSide = -1; //1 = left, -1 = right
-	zone = 5; //choose 5 or 10
+	//majorSide = "blue";
+	//minorSide = -1; //1 = left, -1 = right
+	//zone = 5; //choose 5, 10, or 20
 	clearTimer(T3);
 	startTask(runBasicCompAuton);
 	while(time1(T3)<12500){wait1Msec(20);}
