@@ -46,14 +46,14 @@ void pre_auton()
 
 	majorSide = "blue";
 
-	if(sideToggle == 1) //if empty (1), then side is left (1), else side is right (-1)
+	if(SensorValue[sideToggle] == 1) //if empty (1), then side is left (1), else side is right (-1)
 		minorSide = 1;
 	else
 		minorSide = -1;
 
-	if(majorZoneToggle == 0) //if jumper is in (0), zone is 20
+	if(SensorValue[majorZoneToggle] == 0) //if jumper is in (0), zone is 20
 		zone = 20;
-	else if(minorZoneToggle == 1) //if empty (and majorZone is empty), zone is 10, else 5
+	else if(SensorValue[minorZoneToggle] == 1) //if empty (and majorZone is empty), zone is 10, else 5
 		zone = 10;
 	else
 		zone = 5;
@@ -74,7 +74,7 @@ task runBasicCompAuton()
 	setForkliftPos(FORKLIFT_DOWN);
 	//wait1Msec(500);
 	//setTopLiftPos(BACK_TOP,7,-15);  //UNCOMMENT ONCE POTEN IS ON LIFT
-	driveStraight(1320,127); //drive to mobile goal
+	driveStraight(1375,127); //drive to mobile goal
 
 	//pick up goal
 	reachedMobileGoal = true; //force cone lift to drop
@@ -86,24 +86,26 @@ task runBasicCompAuton()
 	wait1Msec(300);
 	setForkliftPower(0);
 
+
 	if(zone==20)
 	{
-		turnToPos(minorSide*200);
+		turnToPos(200*minorSide);
 		driveStraight(-1600,127);
 	}
 	else if(zone == 10)
 	{
-	//drive back
-	turnToPos(0);
-	setBaseLiftPos(3300, 10);
-	driveStraight(-1200,127); //drive back -1000
-}
-else
-{
-	turnToPos(0);
-	setBaseLiftPos(3300, 10);
-	driveStraight(-750,127); //drive back -1000
-}
+		//drive back
+		turnToPos(0);
+		setBaseLiftPos(3300, 10);
+		driveStraight(-1200,127); //drive back -1000
+	}
+	else
+	{
+		turnToPos(0);
+		setBaseLiftPos(3300, 10);
+		driveStraight(-750,127); //drive back -1000
+	}
+
 	setClawPower(127);
 	wait1Msec(500);
 	setBaseLiftPos(3200, 10);
@@ -126,7 +128,8 @@ else
 		//driveStraight(400,127);
 		if(minorSide == 1){
 			setLeftMotors(127);
-			setRightMotors(0);}
+			setRightMotors(0);
+		}
 		else
 		{
 			setLeftMotors(0);
@@ -226,14 +229,14 @@ task usercontrol()
 
 	while(true)
 	{
-		if(vexRT[Btn7L]==1)
-		{
-			string side = "blue";
-			//testSpeedStuff();
-			//runBasicCompAuton(side,1,20);
-			//setForkliftPos(FORKLIFT_UP);
-			writeDebugStreamLine("Running basic comp auton");
-		}
+		//if(vexRT[Btn7L]==1)
+		//{
+		//	string side = "blue";
+		//	//testSpeedStuff();
+		//	//runBasicCompAuton(side,1,20);
+		//	//setForkliftPos(FORKLIFT_UP);
+		//	writeDebugStreamLine("Running basic comp auton");
+		//}
 		//if(vexRT[Btn7R]==1)
 		//{
 		//	string side = "blue";
@@ -347,14 +350,16 @@ task usercontrol()
 
 		//AUTO METHODS
 
-		if(btnSevenRight == 1)
-		{
-			setBaseLiftPos(MATCHLOAD_BASE,MATCHLOAD_KP_BASE);
-			setTopLiftPos(MATCHLOAD_TOP,MATCHLOAD_KP_TOP);
-		}
+		//if(btnSevenRight == 1)
+		//{
+		//	setBaseLiftPos(MATCHLOAD_BASE,MATCHLOAD_KP_BASE);
+		//	setTopLiftPos(MATCHLOAD_TOP,MATCHLOAD_KP_TOP);
+		//}
 
 
 		if(btnEightLeft == 1){autoBack();}
+
+		/*
 		else if(btnEightRight == 1 && !autoStackPressed) //if button is now pressed, update cones and update bool to reflect button pressed
 		{
 			autoStackPressed = true;
@@ -365,6 +370,7 @@ task usercontrol()
 		{
 			autoStackPressed = false;
 		}
+		*/
 
 		//cone count
 		if(secondBtnSevenUp == 1 && !coneUpPressed) //if button is now pressed, update cones and update bool to reflect button pressed

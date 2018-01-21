@@ -226,7 +226,7 @@ void driveStraight(int dest, int basePower, float rightMultiplier = 1) //uses co
 		setRightMotors((int)(power*rightMultiplier + rightPowerAdjustment));
 		setLeftMotors((int) (power+leftPowerAdjustment));
 		wait1Msec(50);
-		//writeDebugStreamLine("RightAdjustment: %d, LeftAdjustment: %d", rightPowerAdjustment, leftPowerAdjustment);
+		writeDebugStreamLine("RightAdjustment: %d, LeftAdjustment: %d", rightPowerAdjustment, leftPowerAdjustment);
 		//writeDebugStreamLine("err: %d, power: %d, rpower: %d",err,power,(int)(power*rightMultiplier + rightPowerAdjustment));
 	}
 	stopTask(correctStraight);
@@ -246,6 +246,7 @@ void turnToPos(int pos)
 		setLeftMotors(-power);
 		wait1Msec(50);
 	}
+	writeDebugStreamLine("Cleared turntopos, t4: %i", time1[T4]);
 }
 
 void setTopLiftPos(int aDesired, float aKp, int aPowAfter = 0)
