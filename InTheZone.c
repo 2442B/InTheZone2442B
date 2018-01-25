@@ -3,9 +3,10 @@
 #pragma config(Sensor, in4,    gyro,           sensorGyro)
 #pragma config(Sensor, dgtl1,  rightQuad,      sensorQuadEncoder)
 #pragma config(Sensor, dgtl5,  forkliftButton, sensorDigitalIn)
-#pragma config(Sensor, dgtl8,  redLED,         sensorLEDtoVCC)
-#pragma config(Sensor, dgtl9,  yellowLED,      sensorLEDtoVCC)
-#pragma config(Sensor, dgtl10, greenLED,       sensorLEDtoVCC)
+#pragma config(Sensor, dgtl6,  greenLED,       sensorLEDtoVCC)
+#pragma config(Sensor, dgtl7,  sideToggle,     sensorDigitalIn)
+#pragma config(Sensor, dgtl8,  minorZoneToggle, sensorDigitalIn)
+#pragma config(Sensor, dgtl9,  majorZoneToggle, sensorDigitalIn)
 #pragma config(Sensor, dgtl11, leftQuad,       sensorQuadEncoder)
 #pragma config(Motor,  port1,           claw,          tmotorVex393_HBridge, openLoop)
 #pragma config(Motor,  port2,           topLiftLeft,   tmotorVex393_MC29, openLoop)
@@ -28,88 +29,133 @@
 #include "Vex_Competition_Includes.c"
 #include "\InTheZoneLibrary.c"
 
+//for auton task
+string majorSide;
+int minorSide;
+int zone;
+
 void pre_auton()
 {
-	SensorValue[redLED] = 1;
 	writeDebugStreamLine("begin gyro init");
 	SensorType[in4] = sensorNone;
 	wait1Msec(1000);
 	SensorType[in4] = sensorGyro;
 	wait1Msec(2000);
-	SensorScale[in4] = 137;
+	SensorScale[in4] = 133;
 	writeDebugStreamLine("finished gyro init %d", SensorScale[in4]);
-	SensorValue[redLED] = 0;
-	SensorValue[greenLED] = 1;
+
+	majorSide = "blue";
+
+	if(SensorValue[sideToggle] == 1) //if empty (1), then side is left (1), else side is right (-1)
+		minorSide = 1;
+	else
+		minorSide = -1;
+
+	if(SensorValue[majorZoneToggle] == 0) //if jumper is in (0), zone is 20
+		zone = 20;
+	else if(SensorValue[minorZoneToggle] == 1) //if empty (and majorZone is empty), zone is 10, else 5
+		zone = 10;
+	else
+		zone = 5;
 	//white line -- -1315
 
+	SensorValue[greenLED] = 1;
 
 }
-void runBasicCompAuton(string majorSide, int minorSide, int zone)
+
+task runBasicCompAuton()
 {
 	//minorSide: 1 = left, -1 = right, majorSide parameter not used yet
 	clearTimer(T1);
 	reachedMobileGoal = false; //will act as hard stop for lifting cone â?? when reachedMobileGoal is true, the lift will immediately drop
 
 	//Go to mobile goal â Drop mobile base lift, lift cone, and drive straight
-	setBaseLiftPos(3900, 10);
+	setBaseLiftPos(3200, 20);
 	setForkliftPos(FORKLIFT_DOWN);
+	//wait1Msec(500);
 	//setTopLiftPos(BACK_TOP,7,-15);  //UNCOMMENT ONCE POTEN IS ON LIFT
-	driveStraight(1600,127); //drive to mobile goal
+	driveStraight(1375,127); //drive to mobile goal
 
 	//pick up goal
 	reachedMobileGoal = true; //force cone lift to drop
 	//setForkliftPower(1); //pick up goal
-		setForkliftPos(FORKLIFT_UP);
+	setForkliftPos(FORKLIFT_UP);
 	//setTopLiftPos(SCORE_TOP + 150, 7, -15); //+300 quick fix for wrong enum after pot swap //UNCOMMENT AFTER FIX
+	while(SensorValue[forkliftButton] == 1){wait1Msec(20);}
+	setForkliftPower(FORKLIFT_UP * 80);
 	wait1Msec(300);
+	setForkliftPower(0);
 
-	//drive back
-	turnToPos(0);
-	driveStraight(-1200,127); //drive back -1000
-	setClawPower(-127);
-	wait1Msec(300);
-	setClawPower(0);
+
+	if(zone==20)
+	{
+		turnToPos(200*minorSide);
+		driveStraight(-1600,127);
+	}
+	else if(zone == 10)
+	{
+		//drive back
+		turnToPos(0);
+		setBaseLiftPos(3300, 10);
+		driveStraight(-1200,127); //drive back -1000
+	}
+	else
+	{
+		turnToPos(0);
+		setBaseLiftPos(3300, 10);
+		driveStraight(-750,127); //drive back -1000
+	}
+
+	setClawPower(127);
+	wait1Msec(500);
+	setBaseLiftPos(3200, 10);
 
 	//Score goal
 	if(zone == 5)
 	{
 		//just turn around and drive straight
 		turnToPos(-1800*minorSide);
-		driveStraight(400,127);
+		setClawPower(0);
+		setLeftMotors(127);
+		setRightMotors(0);
+		while(SensorValue[gyro] < -2145 * minorSide) {}
+		setAllDriveMotors(0);
 	}
 	else if(zone == 10)
 	{
-		//turn roughly parallel to white line, drive forward a bit, turn fully to face 10 pt zone, then drive straight
-		turnToPos(-1315*minorSide);
-		driveStraight(400,127);
-		//turnDeg(250);
-		turnToPos(-2245*minorSide);
-		driveStraight(700,127);
+		turnToPos(-1800*minorSide);
+		setClawPower(0);
+		//driveStraight(400,127);
+		if(minorSide == 1){
+			setLeftMotors(127);
+			setRightMotors(0);
+		}
+		else
+		{
+			setLeftMotors(0);
+			setRightMotors(127);
+		}
+		while(fabs(SensorValue[gyro]) < 2200) {}
+		setAllDriveMotors(0);
 	}
 	else if(zone == 20)
 	{
-		//turn roughly parallel to white line, drive forward a bit, turn fully to face 10 pt zone, then drive straight
-		turnToPos(-1315*minorSide);
-		driveStraight(400,127);
-		//turnDeg(250);
-		turnToPos(-2245*minorSide);
-		driveStraight(700,127);
-	}
-	//setClawPower(-127);
-	//wait1Msec(250);
-	//setTopLiftPos(3100,7,-15);
-	//wait1Msec(150);
-	//wait1Msec(250);
+		////turn roughly parallel to white line, drive forward a bit, turn fully to face 10 pt zone, then drive straight
+		//turnToPos(-1320*minorSide);
+		//setClawPower(0);
+		//driveStraight(300,127);
 
-	//Score cone and back away
-	setClawPower(127);
-	//moved earlier
-	setBaseLiftPos(3850, 7); //lift up cone â?? possibly change this to not go back all the way (potentially wasting time in driver control)
-		setForkliftPos(FORKLIFT_DOWN);
-	wait1Msec(500);
-	setClawPower(0);
-	driveStraight(-800,127,1);
-	wait1Msec(250);
+		turnToPos(1270*minorSide);
+		driveStraight(550,127);
+	}
+}
+
+task runEndAuton()
+{
+	setForkliftPos(FORKLIFT_DOWN);
+	wait1Msec(1100);
+	//setClawPower(0);
+	driveStraight(-500,127,1);
 	setTopLiftPower(0);
 	writeDebugStreamLine("Time: %d", time1(T1));
 }
@@ -117,59 +163,64 @@ void runBasicCompAuton(string majorSide, int minorSide, int zone)
 void runProgSkills()
 {
 	//run auton to score in 20Z
-		string blank = "";
-		runBasicCompAuton(blank,1,20);
+	string blank = "";
+	//runBasicCompAuton(blank,1,20);
 	//reset to left?
-			//run low power forward?
-			//turn w/ gyro to back into left wall
-			//back into wall
+	//run low power forward?
+	//turn w/ gyro to back into left wall
+	//back into wall
 	//drive to near left corner and score in 10Z left
-			//drive to correct spot to align with goal
-			//turn w/ gyro
-			//drive forward and pick up goal
-			//turn 180 to face scoring spot
-			//drive forward
-			//score 10Z
+	//drive to correct spot to align with goal
+	//turn w/ gyro
+	//drive forward and pick up goal
+	//turn 180 to face scoring spot
+	//drive forward
+	//score 10Z
 	//drive to near right corner and score in 10Z right
-			//turn
-			//drive forward until aligned
-			//turn
-			//drive forward and pick up goal
-			//turn 180 to face scoring spot
-			//drive forward
-			//score 10Z
+	//turn
+	//drive forward until aligned
+	//turn
+	//drive forward and pick up goal
+	//turn 180 to face scoring spot
+	//drive forward
+	//score 10Z
 	//drive to far right corner and score in 10Z middle
-			//turn 180
-			//drive forward and pick up goal
-			//turn 180
-			//drive forward until 5Z
-			//turn
-			//drive
-			//turn to center
-			//score goal in 10Z
+	//turn 180
+	//drive forward and pick up goal
+	//turn 180
+	//drive forward until 5Z
+	//turn
+	//drive
+	//turn to center
+	//score goal in 10Z
 	//drive to far left corner and score in far 20Z
-			//turn to left
-			//drive until aligned
-			//turn until aligned
-			//drive forward and pick up goal
-			//drive forward
-			//turn
-			//drive
-			//turn to 20Z
-			//score in 20Z
+	//turn to left
+	//drive until aligned
+	//turn until aligned
+	//drive forward and pick up goal
+	//drive forward
+	//turn
+	//drive
+	//turn to 20Z
+	//score in 20Z
 }
 
 task autonomous()
 {
-	string majorSide = "blue";
-	int minorSide = 1; //1 = left, -1 = right
-	int zone = 10; //choose 5 or 10
-	runBasicCompAuton(majorSide,minorSide,zone);
+	//majorSide = "blue";
+	//minorSide = -1; //1 = left, -1 = right
+	//zone = 5; //choose 5, 10, or 20
+	clearTimer(T3);
+	startTask(runBasicCompAuton);
+	while(time1(T3)<12500){wait1Msec(20);}
+	stopTask(runBasicCompAuton);
+	startTask(runEndAuton);
 	//runProgSkills(side);
 }
 
 task usercontrol()
 {
+	stopTask(runEndAuton);
 	bool coneUpPressed = false;
 	bool coneDownPressed = false;
 	bool coneZeroPressed = false;
@@ -178,19 +229,21 @@ task usercontrol()
 
 	while(true)
 	{
-		/*
-		if(vexRT[Btn7L]==1)
-		{
-			string side = "blue";
-			runBasicCompAuton(side,1,5);
-			writeDebugStreamLine("Running basic comp auton");
-		}
-		*/
+
+		//if(vexRT[Btn7L]==1)
+		//{
+		//	string side = "blue";
+		//	//testSpeedStuff();
+		//	//runBasicCompAuton(side,1,20);
+		//	//setForkliftPos(FORKLIFT_UP);
+		//	writeDebugStreamLine("Running basic comp auton");
+		//}
 		//if(vexRT[Btn7R]==1)
 		//{
 		//	string side = "blue";
-		//	runProgSkills();
-		//}
+		//	//runProgSkills();
+		//	setForkliftPos(FORKLIFT_DOWN);
+
 
 		//Buttons and Joysticks
 		int  rightJoy = vexRT[Ch2];
@@ -205,7 +258,8 @@ task usercontrol()
 		word btnSevenDown = vexRT[Btn7D]; //forklift down
 		word btnEightLeft = vexRT[Btn8L]; //auto score
 		word btnEightRight = vexRT[Btn8R]; //auto back
-		word btnSevenLeft = vexRT[Btn7L]; //no more auton testing, move to matchloads
+		word btnSevenLeft = vexRT[Btn7L]; //auton testing
+		word btnSevenRight = vexRT[Btn7R]; //move to matchloads
 		word secondBtnSevenUp = vexRT[Btn7UXmtr2]; //+1 to cone count
 		word secondBtnSevenDown = vexRT[Btn7DXmtr2]; //-1 to cone count
 		word secondBtnSevenLeft = vexRT[Btn7LXmtr2]; //zero cone count
@@ -298,6 +352,7 @@ task usercontrol()
 		}
 
 		//AUTO METHODS
+<<<<<<< HEAD
     if(btnEightLeft == 1){autoBack();}
     else if(btnEightRight == 1 && !autoStackPressed) //if button is now pressed, update cones and update bool to reflect button pressed
     {
@@ -317,6 +372,30 @@ task usercontrol()
 			//setTopLiftPos(MATCHLOAD_TOP,MATCHLOAD_KP_TOP);
 			driveStraight(-2500);
 		}
+=======
+
+		//if(btnSevenRight == 1)
+		//{
+		//	setBaseLiftPos(MATCHLOAD_BASE,MATCHLOAD_KP_BASE);
+		//	setTopLiftPos(MATCHLOAD_TOP,MATCHLOAD_KP_TOP);
+		//}
+>>>>>>> 83196905b11b86cda4dd58ae5cb9535e986de71a
+
+
+		if(btnEightLeft == 1){autoBack();}
+
+		/*
+		else if(btnEightRight == 1 && !autoStackPressed) //if button is now pressed, update cones and update bool to reflect button pressed
+		{
+			autoStackPressed = true;
+			autoStack();
+			writeDebugStreamLine("Cones Stacked: %d", conesStacked);
+		}
+		else if(btnEightRight == 0 && autoStackPressed) //if button is no longer pressed, update bool to reflect lack of press
+		{
+			autoStackPressed = false;
+		}
+		*/
 
 		//cone count
 		if(secondBtnSevenUp == 1 && !coneUpPressed) //if button is now pressed, update cones and update bool to reflect button pressed

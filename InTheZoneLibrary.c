@@ -3,9 +3,10 @@
 #pragma config(Sensor, in4,    gyro,           sensorGyro)
 #pragma config(Sensor, dgtl1,  rightQuad,      sensorQuadEncoder)
 #pragma config(Sensor, dgtl5,  forkliftButton, sensorDigitalIn)
-#pragma config(Sensor, dgtl8,  redLED,         sensorLEDtoVCC)
-#pragma config(Sensor, dgtl9,  yellowLED,      sensorLEDtoVCC)
-#pragma config(Sensor, dgtl10, greenLED,       sensorLEDtoVCC)
+#pragma config(Sensor, dgtl6,  greenLED,       sensorLEDtoVCC)
+#pragma config(Sensor, dgtl7,  sideToggle,     sensorDigitalIn)
+#pragma config(Sensor, dgtl8,  minorZoneToggle, sensorDigitalIn)
+#pragma config(Sensor, dgtl9,  majorZoneToggle, sensorDigitalIn)
 #pragma config(Sensor, dgtl11, leftQuad,       sensorQuadEncoder)
 #pragma config(Motor,  port1,           claw,          tmotorVex393_HBridge, openLoop)
 #pragma config(Motor,  port2,           topLiftLeft,   tmotorVex393_MC29, openLoop)
@@ -28,9 +29,10 @@
 enum ForkliftPos {FORKLIFT_UP=1,FORKLIFT_DOWN=-1};
 enum PotenValuesTop {BACK_TOP = 500, UPRIGHT_TOP = 2008, MATCHLOAD_TOP = 580, SCORE_TOP = 3000};
 enum PotenValuesClaw {BACK_CLAW = 3700, MATCHLOAD_CLAW = 750};
-enum PotenValuesBase {BACK_BASE = 4095, MATCHLOAD_BASE = 3200, HIGHEST_BASE =  2608}; //values increase as lift moves down
-int topLiftPositions[12] = {3700,2600,2775,2500,4000,4000,4000,4000,4000,4000,4000,4000};
-int baseLiftPositions[12] = {3600,3950,3500,3180,3500,3350,3100,3400,3300,3250,2695,2525};
+enum PotenValuesBase {BACK_BASE = 4095, MATCHLOAD_BASE = 3250, HIGHEST_BASE =  2608}; //values increase as lift moves down
+int topLiftPositions[12] = {3700,2600,2775,2600,2600,2600,2600,2600,2600,2600,2600,2600};
+int baseLiftPositions[12] = {3600,3550,3400,3300,3100,3000,2900,3400,3300,3250,2695,2525};
+int secondBaseLiftPositions[12] = {0,3450,3400,3300,3100,3000,2900,3400,3300,3250,2695,2525};
 
 /*base
 back = 3980
@@ -139,7 +141,7 @@ task correctStraight()
 		leftPowerAdjustment = -power;
 		oldErr = err;
 		totalErr += err;
-		writeDebugStreamLine("Err: %d, Deriv: %d, TotalErr: %d, Integral: %d, Power: %d", err,deriv,totalErr,integral,power);
+		//writeDebugStreamLine("Err: %d, Deriv: %d, TotalErr: %d, Integral: %d, Power: %d", err,deriv,totalErr,integral,power);
 		wait1Msec(50);
 	}
 }
@@ -157,7 +159,7 @@ task setTopLiftPosTask() //reachedMobileGoal is only used in auton to stop and h
 		err = desiredTop - SensorValue[topLiftPoten];
 		power = (int) (-err*127/4095*kpTop);
 		setTopLiftPower(power);
-		writeDebugStreamLine("Desired: %d, Poten: %d, Power: %d, Error: %d", desiredTop, SensorValue[topLiftPoten], power,err);
+		//writeDebugStreamLine("Desired: %d, Poten: %d, Power: %d, Error: %d", desiredTop, SensorValue[topLiftPoten], power,err);
 		wait1Msec(50);
 	}
 	//writeDebugStreamLine("Moving to powAfter");
@@ -174,7 +176,7 @@ task setBaseLiftPosTask()
 	while(abs(err)>ERR_MARGIN) //adjust power of motors while error is outide of certain range, then set power to 0
 	{
 		err = desiredBase - SensorValue[baseLiftPoten];
-		power = (int) (err*127/4095*kpBase);
+		power = (int) (err*127/2000*kpBase);
 		setBaseLiftPower(power);
 		//writeDebugStreamLine("Poten: %d, Power: %d, Error: %d", SensorValue[baseLiftPoten], power,err);
 		wait1Msec(50);
@@ -198,7 +200,7 @@ task setForkliftPosTask()
 {
 	clearTimer(T4);
 	setForkliftPower(forkliftPos*127);
-	while(SensorValue(forkliftButton) == 1 && time1(T4)<1800){}
+	while((SensorValue(forkliftButton) == 1 || forkliftPos==FORKLIFT_DOWN) && time1(T4)<1800){}
 	setForkliftPower(0);
 }
 
@@ -224,7 +226,7 @@ void driveStraight(int dest, int basePower = 127, float rightMultiplier = 1) //u
 		setRightMotors((int)(power*rightMultiplier + rightPowerAdjustment));
 		setLeftMotors((int) (power+leftPowerAdjustment));
 		wait1Msec(50);
-		//writeDebugStreamLine("RightAdjustment: %d, LeftAdjustment: %d", rightPowerAdjustment, leftPowerAdjustment);
+		writeDebugStreamLine("RightAdjustment: %d, LeftAdjustment: %d", rightPowerAdjustment, leftPowerAdjustment);
 		//writeDebugStreamLine("err: %d, power: %d, rpower: %d",err,power,(int)(power*rightMultiplier + rightPowerAdjustment));
 	}
 	stopTask(correctStraight);
@@ -244,6 +246,7 @@ void turnToPos(int pos)
 		setLeftMotors(-power);
 		wait1Msec(50);
 	}
+	writeDebugStreamLine("Cleared turntopos, t4: %i", time1[T4]);
 }
 
 void setTopLiftPos(int aDesired, float aKp, int aPowAfter = 0)
@@ -274,14 +277,22 @@ void setClawUntilPos(int aDesiredClaw, int aClawPower)
 /////MORE COMPLEX TASKS - AUTOSTACKING///
 task autoScoreTask()
 {
-    int topLiftStart = 100*topLiftPositions[conesStacked]; //poten units of base lift corresponing to top lift swing-around time, assuming poten increases towards score (increasing distance == increasing time alloted)
-    //writeDebugStreamLine(" baseLiftPosDesired: %d", 	baseLiftPositions[conesStacked]);
+	int topLiftStart = 1*topLiftPositions[conesStacked]; //poten units of base lift corresponing to top lift swing-around time, assuming poten increases towards score (increasing distance == increasing time alloted)
+	//writeDebugStreamLine(" baseLiftPosDesired: %d", 	baseLiftPositions[conesStacked]);
 	setBaseLiftPos(baseLiftPositions[conesStacked],SCORE_KP_BASE);
 	//writeDebugStreamLine("must be less than this level: %d", baseLiftPositions[conesStacked] - topLiftStart - ERR_MARGIN);
-    while(SensorValue[baseLiftPoten] > baseLiftPositions[conesStacked] + topLiftStart + ERR_MARGIN){wait1Msec(20);} //assuming poten decreases towards up
+	while(SensorValue[baseLiftPoten] > baseLiftPositions[conesStacked] + topLiftStart + ERR_MARGIN){wait1Msec(20);} //assuming poten decreases towards up
+	wait1Msec(20);
+	writeDebugStreamLine("first while loop in score");
+	while(SensorValue[baseLiftPoten] > baseLiftPositions[conesStacked] + topLiftStart + ERR_MARGIN){wait1Msec(20);}
+	writeDebugStreamLine("second while in score");
 	setTopLiftPos(topLiftPositions[conesStacked],SCORE_KP_TOP);
-	//while(SensorValue[topLiftPoten] < topLiftPositions[conesStacked] - ERR_MARGIN || SensorValue[baseLiftPoten] > baseLiftPositions[conesStacked] + ERR_MARGIN){wait1Msec(50);}
+	while(SensorValue[topLiftPoten] < topLiftPositions[conesStacked] - ERR_MARGIN){wait1Msec(20);}
+	writeDebugStreamLine("third while in score");
+	if(secondBaseLiftPositions[conesStacked] > 0 )
+		setBaseLiftPos(secondBaseLiftPositions[conesStacked],SCORE_KP_BASE);
 	conesStacked++;
+	writeDebugStreamLine("last while in score");
 }
 
 task autoBackTask()
@@ -297,12 +308,14 @@ task autoBackTask()
 
 task autoStackTask()
 {
-    int thisConeStack = conesStacked;
-    startTask(autoScoreTask);
-    while(SensorValue[topLiftPoten] < topLiftPositions[conesStacked] - ERR_MARGIN || SensorValue[baseLiftPoten] > baseLiftPositions[conesStacked] + ERR_MARGIN){wait1Msec(50);}
-    wait1Msec(200);
-    startTask(autoBackTask);
-
+	int thisConeStack = conesStacked;
+	startTask(autoScoreTask);
+	while(SensorValue[topLiftPoten] < topLiftPositions[conesStacked] - ERR_MARGIN || SensorValue[baseLiftPoten] > baseLiftPositions[conesStacked] + ERR_MARGIN){wait1Msec(50);}
+	writeDebugStreamLine("after 1st while in autoStack");
+	//while(SensorValue[topLiftPoten] < topLiftPositions[conesStacked] - ERR_MARGIN || (secondBaseLiftPositions[conesStacked] > 0 && SensorValue[baseLiftPoten] > secondBaseLiftPositions[conesStacked] + ERR_MARGIN)){wait1Msec(50);}
+	wait1Msec(200);
+	writeDebugStreamLine("Starting autoBack task");
+	startTask(autoBackTask);
 }
 
 ////AND CORRESPONDING MORE COMPLEX METHODS/////
@@ -319,5 +332,5 @@ void autoBack()
 
 void autoStack()
 {
-    startTask(autoStackTask);
+	startTask(autoStackTask);
 }
