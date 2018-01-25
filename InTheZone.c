@@ -178,12 +178,14 @@ task usercontrol()
 
 	while(true)
 	{
+		/*
 		if(vexRT[Btn7L]==1)
 		{
 			string side = "blue";
 			runBasicCompAuton(side,1,5);
 			writeDebugStreamLine("Running basic comp auton");
 		}
+		*/
 		//if(vexRT[Btn7R]==1)
 		//{
 		//	string side = "blue";
@@ -231,10 +233,12 @@ task usercontrol()
 			//setTopLiftPower(-80);
 			setTopLiftPos(BACK_TOP,BACK_KP_TOP);
 		}
-		//else
-		//{
-		//	setTopLiftPower(0);
-		//}
+		/*
+		else
+		{
+			setTopLiftPower(0);
+		}
+		*/
 
 		//BASE LIFT
 		if(btnEightUp == 1)
@@ -276,14 +280,14 @@ task usercontrol()
 		if(leftTriggerDown == 1)
 		{
 			if(userControlClaw)
-				setClawPower(110); //open claw
+				setClawPower(127); //open claw
 			else
 				userControlClaw = true;
 		}
 		else if(leftTriggerUp == 1)
 		{
 			if(userControlClaw)
-				setClawPower(-110); //close claw
+				setClawPower(-127); //close claw
 			else
 				userControlClaw = true;
 		}
@@ -294,24 +298,25 @@ task usercontrol()
 		}
 
 		//AUTO METHODS
-        if(btnEightLeft == 1){autoBack();}
-        else if(btnEightRight == 1 && !autoStackPressed) //if button is now pressed, update cones and update bool to reflect button pressed
-        {
-            autoStackPressed = true;
-            autoStack();
-            writeDebugStreamLine("Cones Stacked: %d", conesStacked);
-        }
-        else if(btnEightRight == 0 && autoStackPressed) //if button is no longer pressed, update bool to reflect lack of press
-        {
-            autoStackPressed = false;
-        }
+    if(btnEightLeft == 1){autoBack();}
+    else if(btnEightRight == 1 && !autoStackPressed) //if button is now pressed, update cones and update bool to reflect button pressed
+    {
+        autoStackPressed = true;
+        autoStack();
+        writeDebugStreamLine("Cones Stacked: %d", conesStacked);
+    }
+    else if(btnEightRight == 0 && autoStackPressed) //if button is no longer pressed, update bool to reflect lack of press
+    {
+        autoStackPressed = false;
+    }
 
 
-		//if(btnSevenLeft == 1)
-		//{
-		//	setBaseLiftPos(MATCHLOAD_BASE,MATCHLOAD_KP_BASE);
-		//	setTopLiftPos(MATCHLOAD_TOP,MATCHLOAD_KP_TOP);
-		//}
+		if(btnSevenLeft == 1)
+		{
+			//setBaseLiftPos(MATCHLOAD_BASE,MATCHLOAD_KP_BASE);
+			//setTopLiftPos(MATCHLOAD_TOP,MATCHLOAD_KP_TOP);
+			driveStraight(-2500);
+		}
 
 		//cone count
 		if(secondBtnSevenUp == 1 && !coneUpPressed) //if button is now pressed, update cones and update bool to reflect button pressed

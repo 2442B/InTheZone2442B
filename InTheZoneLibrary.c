@@ -132,7 +132,7 @@ task correctStraight()
 	while(1)
 	{
 		err = theta - SensorValue[gyro];
-		deriv = (err-oldErr); //if error is increasing, apply more power (compensate for less momentum). else, apply more power
+		deriv = (err-oldErr); //if error is increasing, apply more power (compensate for less momentum). else, apply less power
 		integral = totalErr * 0.03;
 		power = err + deriv + integral;
 		rightPowerAdjustment = power;
@@ -208,7 +208,7 @@ void setForkliftPos(int aForkPos)
 	forkliftPos = aForkPos;
 	startTask(setForkliftPosTask);
 }
-void driveStraight(int dest, int basePower, float rightMultiplier = 1) //uses correctStraight task (with gyro) to dive straight
+void driveStraight(int dest, int basePower = 127, float rightMultiplier = 1) //uses correctStraight task (with gyro) to dive straight
 {
 	theta = SensorValue[gyro];
 	SensorValue[leftQuad] = 0;
