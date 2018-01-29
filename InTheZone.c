@@ -30,9 +30,9 @@
 #include "\InTheZoneLibrary.c"
 
 //for auton task
-string majorSide;
-int minorSide;
-int zone;
+string aMajorSide;
+int aMinorSide;
+int aZone;
 
 void pre_auton()
 {
@@ -44,33 +44,33 @@ void pre_auton()
 	SensorScale[in4] = 133;
 	writeDebugStreamLine("finished gyro init %d", SensorScale[in4]);
 
-	majorSide = "blue";
+	aMajorSide = "blue";
 
 	if(SensorValue[sideToggle] == 1) //if empty (1), then side is left (1), else side is right (-1)
-		minorSide = 1;
+		aMinorSide = 1;
 	else
-		minorSide = -1;
+		aMinorSide = -1;
 
 	if(SensorValue[majorZoneToggle] == 0) //if jumper is in (0), zone is 20
-		zone = 20;
+		aZone = 20;
 	else if(SensorValue[minorZoneToggle] == 1) //if empty (and majorZone is empty), zone is 10, else 5
-		zone = 10;
+		aZone = 10;
 	else
-		zone = 5;
+		aZone = 5;
 	//white line -- -1315
 
 	SensorValue[greenLED] = 1;
 
 }
 
-task runBasicCompAuton()
+void runBasicCompAuton(int minorSide, int zone)
 {
 	//minorSide: 1 = left, -1 = right, majorSide parameter not used yet
 	clearTimer(T1);
 	reachedMobileGoal = false; //will act as hard stop for lifting cone â?? when reachedMobileGoal is true, the lift will immediately drop
 
 	//Go to mobile goal â Drop mobile base lift, lift cone, and drive straight
-	setBaseLiftPos(3200, 20);
+	setBaseLiftPos(3300, 10);
 	setForkliftPos(FORKLIFT_DOWN);
 	//wait1Msec(500);
 	//setTopLiftPos(BACK_TOP,7,-15);  //UNCOMMENT ONCE POTEN IS ON LIFT
@@ -148,6 +148,12 @@ task runBasicCompAuton()
 		turnToPos(1270*minorSide);
 		driveStraight(550,127);
 	}
+		setForkliftPos(FORKLIFT_DOWN);
+	wait1Msec(1100);
+	//setClawPower(0);
+	driveStraight(-500,127,1);
+	setTopLiftPower(0);
+	writeDebugStreamLine("Time: %d", time1(T1));
 }
 
 task runEndAuton()
@@ -210,11 +216,13 @@ task autonomous()
 	//majorSide = "blue";
 	//minorSide = -1; //1 = left, -1 = right
 	//zone = 5; //choose 5, 10, or 20
-	clearTimer(T3);
-	startTask(runBasicCompAuton);
-	while(time1(T3)<12500){wait1Msec(20);}
-	stopTask(runBasicCompAuton);
-	startTask(runEndAuton);
+	//clearTimer(T3);
+writeDebugStreamLine("the zone %d",aZone);
+writeDebugStreamLine("the side %d",aMinorSide);
+	runBasicCompAuton(aMinorSide,aZone);
+	//while(time1(T3)<12500){wait1Msec(20);}
+	//stopTask(runBasicCompAuton);
+	//startTask(runEndAuton);
 	//runProgSkills(side);
 }
 
@@ -352,7 +360,6 @@ task usercontrol()
 		}
 
 		//AUTO METHODS
-<<<<<<< HEAD
     if(btnEightLeft == 1){autoBack();}
     else if(btnEightRight == 1 && !autoStackPressed) //if button is now pressed, update cones and update bool to reflect button pressed
     {
@@ -372,15 +379,12 @@ task usercontrol()
 			//setTopLiftPos(MATCHLOAD_TOP,MATCHLOAD_KP_TOP);
 			driveStraight(-2500);
 		}
-=======
 
 		//if(btnSevenRight == 1)
 		//{
 		//	setBaseLiftPos(MATCHLOAD_BASE,MATCHLOAD_KP_BASE);
 		//	setTopLiftPos(MATCHLOAD_TOP,MATCHLOAD_KP_TOP);
 		//}
->>>>>>> 83196905b11b86cda4dd58ae5cb9535e986de71a
-
 
 		if(btnEightLeft == 1){autoBack();}
 

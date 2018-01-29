@@ -200,7 +200,7 @@ task setForkliftPosTask()
 {
 	clearTimer(T4);
 	setForkliftPower(forkliftPos*127);
-	while((SensorValue(forkliftButton) == 1 || forkliftPos==FORKLIFT_DOWN) && time1(T4)<1800){}
+	while((SensorValue(forkliftButton) == 1 || forkliftPos==FORKLIFT_DOWN) && time1(T4)<1800){wait1Msec(20)}
 	setForkliftPower(0);
 }
 
@@ -225,6 +225,7 @@ void driveStraight(int dest, int basePower = 127, float rightMultiplier = 1) //u
 		power = basePower*sgn(err);
 		setRightMotors((int)(power*rightMultiplier + rightPowerAdjustment));
 		setLeftMotors((int) (power+leftPowerAdjustment));
+		writeDebugStreamLine("motors set");
 		wait1Msec(50);
 		writeDebugStreamLine("RightAdjustment: %d, LeftAdjustment: %d", rightPowerAdjustment, leftPowerAdjustment);
 		//writeDebugStreamLine("err: %d, power: %d, rpower: %d",err,power,(int)(power*rightMultiplier + rightPowerAdjustment));
