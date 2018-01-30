@@ -136,12 +136,12 @@ task correctStraight()
 		err = theta - SensorValue[gyro];
 		deriv = (err-oldErr); //if error is increasing, apply more power (compensate for less momentum). else, apply less power
 		integral = totalErr * 0.03;
-		power = err + deriv + integral;
+		power = err*2 + deriv + integral;
 		rightPowerAdjustment = power;
 		leftPowerAdjustment = -power;
 		oldErr = err;
 		totalErr += err;
-		//writeDebugStreamLine("Err: %d, Deriv: %d, TotalErr: %d, Integral: %d, Power: %d", err,deriv,totalErr,integral,power);
+		writeDebugStreamLine("Drive, Err: %d, Deriv: %d, TotalErr: %d, Integral: %d, Power: %d", err,deriv,totalErr,integral,power);
 		wait1Msec(50);
 	}
 }
@@ -217,6 +217,8 @@ void driveStraight(int dest, int basePower = 127, float rightMultiplier = 1) //u
 	SensorValue[rightQuad] = 0;
 	int err = dest;
 	int power = 127;
+	rightPowerAdjustment = 0;
+	leftPowerAdjustment = 0;
 	startTask(correctStraight);
 	//writeDebugStreamLine("err: %d, power: %d sdfdgdsgfgfsggffs",err,power);
 	while(fabs(err)>20 && fabs(dest - (-1*SensorValue[leftQuad]))>20)
@@ -239,15 +241,31 @@ void turnToPos(int pos)
 	clearTimer(T4);
 	int err = pos - SensorValue[gyro];
 	int power;
-	while(fabs(err) > 80 && time1(T4)<2500)
+	int errTerm;
+	int derivTerm;
+	int intTerm;
+	int oldErrTerm = 0;
+	int totalErrTerm = 0;
+	//while(fabs(err) > 80 && time1(T4)<2500)
+	while(true)
 	{
 		err = pos - SensorValue[gyro];
-		power = 127*err*0.004+10;
+		errTerm = err*1;
+		derivTerm = (oldErrTerm - err)*0.5;
+		intTerm = totalErrTerm*0.001;
+
+		power = err*0.4;
+
 		setRightMotors(power);
 		setLeftMotors(-power);
+		writeDebugStreamLine("Turning, Err: %d, power: %d", err, power);
+
+		oldErrTerm = err;
+		totalErrTerm += err;
 		wait1Msec(50);
 	}
-	writeDebugStreamLine("Cleared turntopos, t4: %i", time1[T4]);
+	setAllDriveMotors(0);
+	//writeDebugStreamLine("Cleared turntopos, t4: %i", time1[T4]);
 }
 
 void setTopLiftPos(int aDesired, float aKp, int aPowAfter = 0)

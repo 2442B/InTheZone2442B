@@ -59,18 +59,27 @@ void pre_auton()
 		aZone = 5;
 	//white line -- -1315
 
+		writeDebugStreamLine("Zone in preAuton: %d",aZone);
+
 	SensorValue[greenLED] = 1;
 
 }
 
 void runBasicCompAuton(int minorSide, int zone)
 {
+	//driveStraight(1375,127);
+	turnToPos(200);
+	//driveStraight(-800,127);
+}
+
+void runBasicCompAutonReal(int minorSide, int zone)
+{
 	//minorSide: 1 = left, -1 = right, majorSide parameter not used yet
 	clearTimer(T1);
 	reachedMobileGoal = false; //will act as hard stop for lifting cone â?? when reachedMobileGoal is true, the lift will immediately drop
 
 	//Go to mobile goal â Drop mobile base lift, lift cone, and drive straight
-	setBaseLiftPos(3300, 10);
+	setBaseLiftPos(3300, 10,-10);
 	setForkliftPos(FORKLIFT_DOWN);
 	//wait1Msec(500);
 	//setTopLiftPos(BACK_TOP,7,-15);  //UNCOMMENT ONCE POTEN IS ON LIFT
@@ -305,7 +314,6 @@ task usercontrol()
 		//BASE LIFT
 		if(btnEightUp == 1)
 		{
-			writeDebugStreamLine("%d",userControlBase);
 			if(userControlBase)
 				setBaseLiftPower(-127);
 			else
