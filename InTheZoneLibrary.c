@@ -135,7 +135,7 @@ task correctStraight()
 	{
 		err = theta - SensorValue[gyro];
 		deriv = (err-oldErr); //if error is increasing, apply more power (compensate for less momentum). else, apply less power
-		integral = totalErr * 0.03;
+		integral = totalErr * 0.07;
 		power = err*2 + deriv + integral;
 		rightPowerAdjustment = power;
 		leftPowerAdjustment = -power;
@@ -200,7 +200,7 @@ task setForkliftPosTask()
 {
 	clearTimer(T4);
 	setForkliftPower(forkliftPos*127);
-	while((SensorValue(forkliftButton) == 1 || forkliftPos==FORKLIFT_DOWN) && time1(T4)<1800){wait1Msec(20)}
+	while((SensorValue(forkliftButton) == 1 || forkliftPos==FORKLIFT_DOWN) && time1(T4)<1800){wait1Msec(20);}
 	setForkliftPower(0);
 }
 
@@ -236,7 +236,7 @@ void driveStraight(int dest, int basePower = 127, float rightMultiplier = 1) //u
 	setAllDriveMotors(0);
 }
 
-void turnToPos(int pos)
+void turnToPos(int pos,bool withMobileGoal=true)
 {
 	clearTimer(T4);
 	int err = pos - SensorValue[gyro];
@@ -246,15 +246,24 @@ void turnToPos(int pos)
 	int intTerm;
 	int oldErrTerm = 0;
 	int totalErrTerm = 0;
-	//while(fabs(err) > 80 && time1(T4)<2500)
-	while(true)
+	while(fabs(err) > 30 && time1(T4)<2500)
 	{
 		err = pos - SensorValue[gyro];
-		errTerm = err*1;
-		derivTerm = (oldErrTerm - err)*0.5;
-		intTerm = totalErrTerm*0.001;
+		if(!withMobileGoal)
+		{
+			errTerm = err*.5;
+			derivTerm = (err - oldErrTerm)*1.3;
+			intTerm = 0;//totalErrTerm*0.004;
+		}
+		else
+		{
+			errTerm = err*.9;
+			derivTerm = (err - oldErrTerm)*1;
+			intTerm = totalErrTerm*0.0005;
+		}
 
-		power = err*0.4;
+
+		power = errTerm+derivTerm+intTerm;
 
 		setRightMotors(power);
 		setLeftMotors(-power);

@@ -65,21 +65,21 @@ void pre_auton()
 
 }
 
-void runBasicCompAuton(int minorSide, int zone)
+void runBasicCompAutonFake(int minorSide, int zone)
 {
 	//driveStraight(1375,127);
-	turnToPos(200);
+	turnToPos(-900);
 	//driveStraight(-800,127);
 }
 
-void runBasicCompAutonReal(int minorSide, int zone)
+void runBasicCompAuton(int minorSide, int zone)
 {
 	//minorSide: 1 = left, -1 = right, majorSide parameter not used yet
 	clearTimer(T1);
 	reachedMobileGoal = false; //will act as hard stop for lifting cone â?? when reachedMobileGoal is true, the lift will immediately drop
 
 	//Go to mobile goal â Drop mobile base lift, lift cone, and drive straight
-	setBaseLiftPos(3300, 10,-10);
+	setBaseLiftPos(3300, 10,-15);
 	setForkliftPos(FORKLIFT_DOWN);
 	//wait1Msec(500);
 	//setTopLiftPos(BACK_TOP,7,-15);  //UNCOMMENT ONCE POTEN IS ON LIFT
@@ -98,8 +98,8 @@ void runBasicCompAutonReal(int minorSide, int zone)
 
 	if(zone==20)
 	{
-		turnToPos(200*minorSide);
-		driveStraight(-1600,127);
+		turnToPos(140*minorSide);
+		driveStraight(-1700,127);
 	}
 	else if(zone == 10)
 	{
@@ -154,14 +154,13 @@ void runBasicCompAutonReal(int minorSide, int zone)
 		//setClawPower(0);
 		//driveStraight(300,127);
 
-		turnToPos(1270*minorSide);
-		driveStraight(550,127);
+		turnToPos(1337*minorSide);
+		driveStraight(300,127);
 	}
-		setForkliftPos(FORKLIFT_DOWN);
-	wait1Msec(1100);
+	setForkliftPos(FORKLIFT_DOWN);
+	driveStraight(350,127);
 	//setClawPower(0);
 	driveStraight(-500,127,1);
-	setTopLiftPower(0);
 	writeDebugStreamLine("Time: %d", time1(T1));
 }
 
