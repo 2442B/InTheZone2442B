@@ -79,45 +79,41 @@ void runBasicCompAuton(int minorSide, int zone)
 	reachedMobileGoal = false; //will act as hard stop for lifting cone â?? when reachedMobileGoal is true, the lift will immediately drop
 
 	//Go to mobile goal â Drop mobile base lift, lift cone, and drive straight
-	setBaseLiftPos(3300, 10,-15);
+	//setBaseLiftPos(3300, 10,-15); ADD BACK IN
 	setForkliftPos(FORKLIFT_DOWN);
-	//wait1Msec(500);
-	//setTopLiftPos(BACK_TOP,7,-15);  //UNCOMMENT ONCE POTEN IS ON LIFT
 	driveStraight(1375,127); //drive to mobile goal
 
 	//pick up goal
 	reachedMobileGoal = true; //force cone lift to drop
-	//setForkliftPower(1); //pick up goal
 	setForkliftPos(FORKLIFT_UP);
-	//setTopLiftPos(SCORE_TOP + 150, 7, -15); //+300 quick fix for wrong enum after pot swap //UNCOMMENT AFTER FIX
-	while(SensorValue[forkliftButton] == 1){wait1Msec(20);}
-	setForkliftPower(FORKLIFT_UP * 80);
-	wait1Msec(300);
+	//while(SensorValue[forkliftButton] == 1){wait1Msec(20);}
+	//setForkliftPower(FORKLIFT_UP * 80);
+	wait1Msec(1800);
 	setForkliftPower(0);
 
 
 	if(zone==20)
 	{
 		turnToPos(140*minorSide);
-		driveStraight(-1700,127);
+		driveStraight(-1600,127);
 	}
 	else if(zone == 10)
 	{
 		//drive back
 		turnToPos(0);
-		setBaseLiftPos(3300, 10);
+		//setBaseLiftPos(3300, 10); ADD BACK
 		driveStraight(-1200,127); //drive back -1000
 	}
 	else
 	{
 		turnToPos(0);
-		setBaseLiftPos(3300, 10);
+		//setBaseLiftPos(3300, 10); ADD BACK
 		driveStraight(-750,127); //drive back -1000
 	}
 
 	setClawPower(127);
 	wait1Msec(500);
-	setBaseLiftPos(3200, 10);
+	//setBaseLiftPos(3200, 10); ADD BACK
 
 	//Score goal
 	if(zone == 5)
@@ -246,14 +242,14 @@ task usercontrol()
 	while(true)
 	{
 
-		//if(vexRT[Btn7L]==1)
-		//{
-		//	string side = "blue";
-		//	//testSpeedStuff();
-		//	//runBasicCompAuton(side,1,20);
-		//	//setForkliftPos(FORKLIFT_UP);
-		//	writeDebugStreamLine("Running basic comp auton");
-		//}
+		if(vexRT[Btn7L]==1)
+		{
+			//driveStraight(600);
+		turnToPos(500);
+	//runBasicCompAuton(1,20);
+			//setForkliftPos(FORKLIFT_UP);
+			//writeDebugStreamLine("Running basic comp auton");
+		}
 		//if(vexRT[Btn7R]==1)
 		//{
 		//	string side = "blue";

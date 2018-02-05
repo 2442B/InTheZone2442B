@@ -210,7 +210,7 @@ void setForkliftPos(int aForkPos)
 	forkliftPos = aForkPos;
 	startTask(setForkliftPosTask);
 }
-void driveStraight(int dest, int basePower = 127, float rightMultiplier = 1) //uses correctStraight task (with gyro) to dive straight
+void driveStraight(int dest, int basePower = 127, float leftMultiplier = 0.5) //uses correctStraight task (with gyro) to dive straight
 {
 	theta = SensorValue[gyro];
 	SensorValue[leftQuad] = 0;
@@ -225,8 +225,8 @@ void driveStraight(int dest, int basePower = 127, float rightMultiplier = 1) //u
 	{
 		err = dest - SensorValue[leftQuad];
 		power = basePower*sgn(err);
-		setRightMotors((int)(power*rightMultiplier + rightPowerAdjustment));
-		setLeftMotors((int) (power+leftPowerAdjustment));
+		setRightMotors((int)(power + rightPowerAdjustment));
+		setLeftMotors((int) ((power + leftPowerAdjustment)*leftMultiplier));
 		writeDebugStreamLine("motors set");
 		wait1Msec(50);
 		writeDebugStreamLine("RightAdjustment: %d, LeftAdjustment: %d", rightPowerAdjustment, leftPowerAdjustment);
@@ -257,9 +257,9 @@ void turnToPos(int pos,bool withMobileGoal=true)
 		}
 		else
 		{
-			errTerm = err*.9;
+			errTerm = err*0.9;
 			derivTerm = (err - oldErrTerm)*1;
-			intTerm = totalErrTerm*0.0005;
+			intTerm = totalErrTerm*0;
 		}
 
 
