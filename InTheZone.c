@@ -223,7 +223,7 @@ task autonomous()
 	//clearTimer(T3);
 writeDebugStreamLine("the zone %d",aZone);
 writeDebugStreamLine("the side %d",aMinorSide);
-	runBasicCompAuton(aMinorSide,aZone);
+	runBasicCompAuton(1,20);
 	//while(time1(T3)<12500){wait1Msec(20);}
 	//stopTask(runBasicCompAuton);
 	//startTask(runEndAuton);
@@ -244,8 +244,8 @@ task usercontrol()
 
 		if(vexRT[Btn7L]==1)
 		{
-			//driveStraight(600);
-		turnToPos(500);
+			driveStraight(600);
+		//turnToPos(500);
 	//runBasicCompAuton(1,20);
 			//setForkliftPos(FORKLIFT_UP);
 			//writeDebugStreamLine("Running basic comp auton");
@@ -374,14 +374,6 @@ task usercontrol()
     {
         autoStackPressed = false;
     }
-
-
-		if(btnSevenLeft == 1)
-		{
-			//setBaseLiftPos(MATCHLOAD_BASE,MATCHLOAD_KP_BASE);
-			//setTopLiftPos(MATCHLOAD_TOP,MATCHLOAD_KP_TOP);
-			driveStraight(-2500);
-		}
 
 		//if(btnSevenRight == 1)
 		//{
