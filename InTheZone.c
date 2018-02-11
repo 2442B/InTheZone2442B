@@ -2,12 +2,12 @@
 #pragma config(Sensor, in7,    topLiftPoten,   sensorPotentiometer)
 #pragma config(Sensor, in8,    baseLiftPoten,  sensorPotentiometer)
 #pragma config(Sensor, dgtl1,  rightQuad,      sensorQuadEncoder)
+#pragma config(Sensor, dgtl11, leftQuad,      sensorQuadEncoder)
 #pragma config(Sensor, dgtl5,  forkliftButton, sensorDigitalIn)
 #pragma config(Sensor, dgtl6,  greenLED,       sensorLEDtoVCC)
 #pragma config(Sensor, dgtl7,  sideToggle,     sensorDigitalIn)
 #pragma config(Sensor, dgtl8,  minorZoneToggle, sensorDigitalIn)
 #pragma config(Sensor, dgtl9,  majorZoneToggle, sensorDigitalIn)
-#pragma config(Sensor, dgtl11, leftQuad,       sensorQuadEncoder)
 #pragma config(Motor,  port1,           claw,          tmotorVex393_HBridge, openLoop)
 #pragma config(Motor,  port2,           topLift,       tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port3,           driveLeftFront, tmotorVex393_MC29, openLoop)
@@ -223,7 +223,7 @@ task autonomous()
 	//clearTimer(T3);
 writeDebugStreamLine("the zone %d",aZone);
 writeDebugStreamLine("the side %d",aMinorSide);
-	runBasicCompAuton(aMinorSide,aZone);
+	runBasicCompAuton(1,20);
 	//while(time1(T3)<12500){wait1Msec(20);}
 	//stopTask(runBasicCompAuton);
 	//startTask(runEndAuton);
@@ -244,9 +244,9 @@ task usercontrol()
 
 		if(vexRT[Btn7L]==1)
 		{
-			//driveStraight(600);
+			driveStraight(600);
 		//turnToPos(500);
-			runBasicCompAuton(1,20);
+	//runBasicCompAuton(1,20);
 			//setForkliftPos(FORKLIFT_UP);
 			//writeDebugStreamLine("Running basic comp auton");
 		}
@@ -374,14 +374,6 @@ task usercontrol()
     {
         autoStackPressed = false;
     }
-
-
-		if(btnSevenLeft == 1)
-		{
-			//setBaseLiftPos(MATCHLOAD_BASE,MATCHLOAD_KP_BASE);
-			//setTopLiftPos(MATCHLOAD_TOP,MATCHLOAD_KP_TOP);
-			driveStraight(-2500);
-		}
 
 		//if(btnSevenRight == 1)
 		//{

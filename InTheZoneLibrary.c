@@ -146,7 +146,7 @@ task correctStraight()
 		err = theta - SensorValue[gyro];
 		deriv = (err-oldErr); //if error is increasing, apply more power (compensate for less momentum). else, apply less power
 		integral = totalErr * 0.07;
-		power = err*2 + deriv + integral;
+		power = err*2.5 + deriv*1.5 + integral;
 		rightPowerAdjustment = power;
 		leftPowerAdjustment = -power;
 		oldErr = err;
