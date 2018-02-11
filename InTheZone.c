@@ -1,6 +1,6 @@
-#pragma config(Sensor, in1,    topLiftPoten,   sensorPotentiometer)
-#pragma config(Sensor, in2,    baseLiftPoten,  sensorPotentiometer)
 #pragma config(Sensor, in4,    gyro,           sensorGyro)
+#pragma config(Sensor, in7,    topLiftPoten,   sensorPotentiometer)
+#pragma config(Sensor, in8,    baseLiftPoten,  sensorPotentiometer)
 #pragma config(Sensor, dgtl1,  rightQuad,      sensorQuadEncoder)
 #pragma config(Sensor, dgtl5,  forkliftButton, sensorDigitalIn)
 #pragma config(Sensor, dgtl6,  greenLED,       sensorLEDtoVCC)
@@ -79,7 +79,7 @@ void runBasicCompAuton(int minorSide, int zone)
 	reachedMobileGoal = false; //will act as hard stop for lifting cone â?? when reachedMobileGoal is true, the lift will immediately drop
 
 	//Go to mobile goal â Drop mobile base lift, lift cone, and drive straight
-	//setBaseLiftPos(3300, 10,-15); ADD BACK IN
+	setBaseLiftPos(400, 10, -15); //ADD BACK IN
 	setForkliftPos(FORKLIFT_DOWN);
 	driveStraight(1375,127); //drive to mobile goal
 
@@ -245,8 +245,8 @@ task usercontrol()
 		if(vexRT[Btn7L]==1)
 		{
 			//driveStraight(600);
-		turnToPos(500);
-	//runBasicCompAuton(1,20);
+		//turnToPos(500);
+			runBasicCompAuton(1,20);
 			//setForkliftPos(FORKLIFT_UP);
 			//writeDebugStreamLine("Running basic comp auton");
 		}

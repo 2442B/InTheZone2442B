@@ -1,6 +1,6 @@
-#pragma config(Sensor, in1,    topLiftPoten,   sensorPotentiometer)
-#pragma config(Sensor, in2,    baseLiftPoten,  sensorPotentiometer)
 #pragma config(Sensor, in4,    gyro,           sensorGyro)
+#pragma config(Sensor, in7,    topLiftPoten,   sensorPotentiometer)
+#pragma config(Sensor, in8,    baseLiftPoten,  sensorPotentiometer)
 #pragma config(Sensor, dgtl1,  rightQuad,      sensorQuadEncoder)
 #pragma config(Sensor, dgtl5,  forkliftButton, sensorDigitalIn)
 #pragma config(Sensor, dgtl6,  greenLED,       sensorLEDtoVCC)
