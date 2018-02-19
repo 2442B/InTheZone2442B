@@ -34,8 +34,15 @@ string aMajorSide;
 int aMinorSide;
 int aZone;
 
+void waitForRelease()
+{
+	while(nLCDButtons != 0){wait1Msec(5);}
+}
+
 void pre_auton()
 {
+		bLCDBacklight = true;
+		displayLCDCenteredString(0,"Initializing Gyro");
 	writeDebugStreamLine("begin gyro init");
 	SensorType[in4] = sensorNone;
 	wait1Msec(1000);
@@ -44,24 +51,70 @@ void pre_auton()
 	SensorScale[in4] = 133;
 	writeDebugStreamLine("finished gyro init %d", SensorScale[in4]);
 
-	aMajorSide = "blue";
+	string mainBattery;
+	string selection[6] = {"20-pt zone [L]", "20-pt zone [R]", "10-pt zone [L]", "10-pt zone [R]", "5-pt zone [L]", "5-pt zone [R]"};
+	bool showBattery = true;
+	int count = 0;
+	int autonSelect = 0;
+	int sideSelect = 1;
 
-	if(SensorValue[sideToggle] == 1) //if empty (1), then side is left (1), else side is right (-1)
-		aMinorSide = 1;
-	else
-		aMinorSide = -1;
+	//while(true)
+	//{
+		if(nLCDButtons == 2)//center button
+		{
+			waitForRelease();
+			showBattery = !showBattery;
+		}
+		if(!showBattery)
+		{
+			if(nLCDButtons == 1)//left button
+			{
+				count--;
+			}
+			else if(nLCDButtons == 4)//right button
+			{
+				waitForRelease();
+				count++;
+			}
+		}
 
-	if(SensorValue[majorZoneToggle] == 0) //if jumper is in (0), zone is 20
-		aZone = 20;
-	else if(SensorValue[minorZoneToggle] == 1) //if empty (and majorZone is empty), zone is 10, else 5
-		aZone = 10;
-	else
-		aZone = 5;
-	//white line -- -1315
 
-		writeDebugStreamLine("Zone in preAuton: %d",aZone);
+		if(count>5){count=count%5-1;}
+		else if(count<0){count = count+5 + 1;}
 
-	SensorValue[greenLED] = 1;
+		clearLCDLine(0);
+		if(showBattery)
+		{
+			sprintf(mainBattery, "Main: %f", nImmediateBatteryLevel/1000.0);
+			displayLCDCenteredString(0,mainBattery);
+		}
+		else
+		{
+			displayLCDCenteredString(0,selection[count]);
+			waitForRelease();
+		}
+
+		wait1Msec(25);
+	//}
+
+	//aMajorSide = "blue";
+
+	//if(SensorValue[sideToggle] == 1) //if empty (1), then side is left (1), else side is right (-1)
+	//	aMinorSide = 1;
+	//else
+	//	aMinorSide = -1;
+
+	//if(SensorValue[majorZoneToggle] == 0) //if jumper is in (0), zone is 20
+	//	aZone = 20;
+	//else if(SensorValue[minorZoneToggle] == 1) //if empty (and majorZone is empty), zone is 10, else 5
+	//	aZone = 10;
+	//else
+	//	aZone = 5;
+	////white line -- -1315
+
+	//	writeDebugStreamLine("Zone in preAuton: %d",aZone);
+
+	//SensorValue[greenLED] = 1;
 
 }
 
@@ -126,6 +179,7 @@ void runBasicCompAuton(int minorSide, int zone)
 		setRightMotors(0);
 		while(SensorValue[gyro] < -2145 * minorSide) {}
 		setAllDriveMotors(0);
+		setForkliftPos(FORKLIFT_DOWN);
 	}
 	else if(zone == 10)
 	{
@@ -143,6 +197,7 @@ void runBasicCompAuton(int minorSide, int zone)
 		}
 		while(fabs(SensorValue[gyro]) < 2200) {}
 		setAllDriveMotors(0);
+		setForkliftPos(FORKLIFT_DOWN);
 	}
 	else if(zone == 20)
 	{
@@ -152,10 +207,11 @@ void runBasicCompAuton(int minorSide, int zone)
 		//driveStraight(300,127);
 
 		turnToPos(1337*minorSide);
+		driveStraight(200,127);
+		setForkliftPos(FORKLIFT_DOWN);
 		driveStraight(300,127);
 	}
-	setForkliftPos(FORKLIFT_DOWN);
-	driveStraight(350,127);
+
 	//setClawPower(0);
 	driveStraight(-500,127,1);
 	writeDebugStreamLine("Time: %d", time1(T1));
@@ -245,9 +301,9 @@ task usercontrol()
 
 		if(vexRT[Btn7L]==1)
 		{
-			driveStraight(600);
-		//turnToPos(500);
-	//runBasicCompAuton(1,20);
+			//runBasicCompAuton(1,20);
+			//driveStraight(600);
+		turnToPos(500);
 			//setForkliftPos(FORKLIFT_UP);
 			//writeDebugStreamLine("Running basic comp auton");
 		}
