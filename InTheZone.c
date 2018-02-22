@@ -1,4 +1,3 @@
-
 #pragma config(Sensor, in4,    gyro,           sensorGyro)
 #pragma config(Sensor, in7,    topLiftPoten,   sensorPotentiometer)
 #pragma config(Sensor, in8,    baseLiftPoten,  sensorPotentiometer)
@@ -55,8 +54,8 @@ void pre_auton()
 	string mainBattery;
 	string selection[6] = {"20-pt zone [L]", "20-pt zone [R]", "10-pt zone [L]", "10-pt zone [R]", "5-pt zone [L]", "5-pt zone [R]"};
 	bool showBattery = true;
-	int count = 0;
 	int autonSelect = 0;
+	int count = 0;
 	int sideSelect = 1;
 
 	//while(true)
@@ -149,26 +148,27 @@ void runBasicCompAuton(int minorSide, int zone)
 
 	if(zone==20)
 	{
-		turnToPos(140*minorSide);
+		turnToPos(0);
+		//turnToPos(140*minorSide);
 		setBaseLiftPos(800, 10);
-		driveStraight(-1600,127);
+		driveStraight(-1200,127);
 	}
 	else if(zone == 10)
 	{
 		//drive back
 		turnToPos(0);
-		setBaseLiftPos(800, 10); //ADD BACK
+		setBaseLiftPos(800, 10);
 		driveStraight(-1200,127); //drive back -1000
 	}
 	else
 	{
 		turnToPos(0);
-		//setBaseLiftPos(3300, 10); ADD BACK
+		setBaseLiftPos(800, 10);
 		driveStraight(-750,127); //drive back -1000
 	}
-	setClawPower(127);
+	setClawPower(-127);
 	wait1Msec(500);
-	setBaseLiftPos(500, 10); //ADD BACK
+	setBaseLiftPos(500, 10);
 
 	//Score goal
 	if(zone == 5)
@@ -186,7 +186,8 @@ void runBasicCompAuton(int minorSide, int zone)
 	{
 		turnToPos(-1800*minorSide);
 		setClawPower(0);
-		//driveStraight(400,127);
+
+		//swing turn
 		if(minorSide == 1){
 			setLeftMotors(127);
 			setRightMotors(0);
@@ -202,10 +203,10 @@ void runBasicCompAuton(int minorSide, int zone)
 	}
 	else if(zone == 20)
 	{
-		////turn roughly parallel to white line, drive forward a bit, turn fully to face 10 pt zone, then drive straight
-		//turnToPos(-1320*minorSide);
-		//setClawPower(0);
-		//driveStraight(300,127);
+		//turn roughly parallel to white line, drive forward a bit, turn fully to face 10 pt zone, then drive straight
+		turnToPos(-1320*minorSide);
+		setClawPower(0);
+		driveStraight(200,127);
 
 		turnToPos(1337*minorSide);
 		driveStraight(200,127);
@@ -281,7 +282,7 @@ task autonomous()
 	//clearTimer(T3);
 writeDebugStreamLine("the zone %d",aZone);
 writeDebugStreamLine("the side %d",aMinorSide);
-	runBasicCompAuton(aMinorSide,aZone);
+	runBasicCompAuton(1,20);
 	//while(time1(T3)<12500){wait1Msec(20);}
 	//stopTask(runBasicCompAuton);
 	//startTask(runEndAuton);
@@ -302,9 +303,9 @@ task usercontrol()
 
 		if(vexRT[Btn7L]==1)
 		{
-			//runBasicCompAuton(1,20);
+			runBasicCompAuton(1,20);
 			//driveStraight(600);
-		turnToPos(500);
+		//turnToPos(500);
 			//setForkliftPos(FORKLIFT_UP);
 			//writeDebugStreamLine("Running basic comp auton");
 		}
