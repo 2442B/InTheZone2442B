@@ -27,7 +27,7 @@
 ////GLOBAL VARIABLES////
 //Poten Values For Lift -- Values increase as lift moves backwards
 enum ForkliftPos {FORKLIFT_UP=1,FORKLIFT_DOWN=-1};
-enum PotenValuesTop {BACK_TOP = 2000, UPRIGHT_TOP = 2008, MATCHLOAD_TOP = 580, SCORE_TOP = 3000};
+enum PotenValuesTop {BACK_TOP = 2000, UPRIGHT_TOP = 2008, MATCHLOAD_TOP = 580, SCORE_TOP = 3750};
 enum PotenValuesClaw {BACK_CLAW = 3700, MATCHLOAD_CLAW = 750};
 enum PotenValuesBase {BACK_BASE = 4095, MATCHLOAD_BASE = 3250, HIGHEST_BASE =  2608}; //values increase as lift moves down
 int topLiftPositions[12] = {3700,2600,2775,2600,2600,2600,2600,2600,2600,2600,2600,2600};
@@ -43,9 +43,9 @@ back = 355
 up = 2608
 scoreAll = 4095 (deadzone after)
 */
-float BACK_KP_TOP = 1.7;
+float BACK_KP_TOP = 5;
 float MATCHLOAD_KP_TOP = 2;
-float SCORE_KP_TOP = 2;
+float SCORE_KP_TOP = 5;
 float BACK_KP_BASE = 10;
 float SCORE_KP_BASE = 250	;
 float MATCHLOAD_KP_BASE = 10;

@@ -351,14 +351,12 @@ task usercontrol()
 		if(rightTriggerUp == 1)
 		{
 			//setTopLiftPower(127);
-			//setTopLiftPos(SCORE_TOP,SCORE_KP_TOP);
-		setTopLiftPos(SCORE_TOP,2);
+			setTopLiftPos(SCORE_TOP,SCORE_KP_TOP);
 		}
 		else if(rightTriggerDown == 1)
 		{
 			//setTopLiftPower(-80);
-			//setTopLiftPos(BACK_TOP,BACK_KP_TOP);
-		setTopLiftPos(BACK_TOP,2);
+			setTopLiftPos(BACK_TOP,BACK_KP_TOP);
 		}
 
 		else
