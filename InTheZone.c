@@ -8,8 +8,7 @@
 #pragma config(Sensor, dgtl8,  minorZoneToggle, sensorDigitalIn)
 #pragma config(Sensor, dgtl9,  majorZoneToggle, sensorDigitalIn)
 #pragma config(Sensor, dgtl11, leftQuad,       sensorQuadEncoder)
-#pragma config(Motor,  port1,           rollers,       tmotorVex393_HBridge, openLoop)
-#pragma config(Motor,  port2,           topLift,       tmotorVex393_MC29, openLoop)
+#pragma config(Motor,  port2,           rollers,       tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port3,           driveLeftFront, tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port4,           driveLeftBack, tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port5,           driveRightBack, tmotorVex393_MC29, openLoop)
@@ -166,7 +165,7 @@ void runBasicCompAuton(int minorSide, int zone)
 		setBaseLiftPos(800, 10);
 		driveStraight(-750,127); //drive back -1000
 	}
-	setClawPower(-127);
+	setClawPower(127);
 	wait1Msec(500);
 	setBaseLiftPos(500, 10);
 
@@ -282,7 +281,7 @@ task autonomous()
 	//clearTimer(T3);
 writeDebugStreamLine("the zone %d",aZone);
 writeDebugStreamLine("the side %d",aMinorSide);
-	runBasicCompAuton(1,20);
+	runBasicCompAuton(aMinorSide,aZone);
 	//while(time1(T3)<12500){wait1Msec(20);}
 	//stopTask(runBasicCompAuton);
 	//startTask(runEndAuton);
@@ -295,8 +294,10 @@ task usercontrol()
 	bool coneUpPressed = false;
 	bool coneDownPressed = false;
 	bool coneZeroPressed = false;
-	bool centerPushed = false; //Center piston pushed or naw
 	bool autoStackPressed = false;
+	bool topLiftPressed = false;
+	char topLiftTargetLoc = 0; // 0 = up; 1 = flat; 2 = down
+
 
 	while(true)
 	{
@@ -350,13 +351,70 @@ task usercontrol()
 		//TOP LIFT
 		if(rightTriggerUp == 1)
 		{
-			//setTopLiftPower(127);
-			setTopLiftPos(SCORE_TOP,SCORE_KP_TOP);
+			setTopLiftPower(127);
+			//setTopLiftPos(SCORE_TOP,SCORE_KP_TOP);
+
+		/*
+			if(topLiftTargetLoc == -1)
+				topLiftTargetLoc = 2;
+
+			if(topLiftTargetLoc == 0 && !topLiftPressed)
+			{
+				setTopLiftPos(BACK_TOP, SCORE_KP_TOP);
+				topLiftPressed = true;
+				topLiftTargetLoc = (topLiftTargetLoc - 1) % 3;
+				writeDebugStreamLine("%d", topLiftTargetLoc);
+			}
+			else if(topLiftTargetLoc == 1 && !topLiftPressed)
+			{
+				setTopLiftPos(FLAT_TOP, FLAT_KP_TOP);
+				topLiftTargetLoc = (topLiftTargetLoc - 1) % 3;
+				writeDebugStreamLine("%d", topLiftTargetLoc);
+				topLiftPressed = true;
+			}
+			else if(topLiftTargetLoc == 2 && !topLiftPressed)
+			{
+				setTopLiftPos(SCORE_TOP, SCORE_KP_TOP);
+				topLiftTargetLoc = (topLiftTargetLoc - 1) % 3;
+				writeDebugStreamLine("%d", topLiftTargetLoc);
+				topLiftPressed = true;
+			}
+			else
+				topLiftPressed = false;
+				*/
 		}
 		else if(rightTriggerDown == 1)
 		{
-			//setTopLiftPower(-80);
-			setTopLiftPos(BACK_TOP,BACK_KP_TOP);
+			setTopLiftPower(-80);
+			//setTopLiftPos(BACK_TOP,BACK_KP_TOP);
+			/*
+			if(topLiftTargetLoc == -1)
+				topLiftTargetLoc = 2;
+
+			if(topLiftTargetLoc == 0 && !topLiftPressed)
+			{
+				setTopLiftPos(BACK_TOP, SCORE_KP_TOP);
+				topLiftPressed = true;
+				topLiftTargetLoc = (topLiftTargetLoc - 1) % 3;
+				writeDebugStreamLine("%d", topLiftTargetLoc);
+			}
+			else if(topLiftTargetLoc == 1 && !topLiftPressed)
+			{
+				setTopLiftPos(FLAT_TOP, FLAT_KP_TOP);
+				topLiftTargetLoc = (topLiftTargetLoc - 1) % 3;
+				writeDebugStreamLine("%d", topLiftTargetLoc);
+				topLiftPressed = true;
+			}
+			else if(topLiftTargetLoc == 2 && !topLiftPressed)
+			{
+				setTopLiftPos(SCORE_TOP, SCORE_KP_TOP);
+				topLiftTargetLoc = (topLiftTargetLoc - 1) % 3;
+				writeDebugStreamLine("%d", topLiftTargetLoc);
+				topLiftPressed = true;
+			}
+			else
+				topLiftPressed = false;
+				*/
 		}
 
 		else

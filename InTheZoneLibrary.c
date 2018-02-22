@@ -27,7 +27,7 @@
 ////GLOBAL VARIABLES////
 //Poten Values For Lift -- Values increase as lift moves backwards
 enum ForkliftPos {FORKLIFT_UP=1,FORKLIFT_DOWN=-1};
-enum PotenValuesTop {BACK_TOP = 2000, UPRIGHT_TOP = 2008, MATCHLOAD_TOP = 580, SCORE_TOP = 3750};
+enum PotenValuesTop {BACK_TOP = 1200, UPRIGHT_TOP = 2008, MATCHLOAD_TOP = 580, SCORE_TOP = 3750, FLAT_TOP=1900};
 enum PotenValuesClaw {BACK_CLAW = 3700, MATCHLOAD_CLAW = 750};
 enum PotenValuesBase {BACK_BASE = 4095, MATCHLOAD_BASE = 3250, HIGHEST_BASE =  2608}; //values increase as lift moves down
 int topLiftPositions[12] = {3700,2600,2775,2600,2600,2600,2600,2600,2600,2600,2600,2600};
@@ -43,11 +43,13 @@ back = 355
 up = 2608
 scoreAll = 4095 (deadzone after)
 */
-float BACK_KP_TOP = 5;
+float BACK_KP_TOP = 10;
 float MATCHLOAD_KP_TOP = 2;
-float SCORE_KP_TOP = 5;
+float SCORE_KP_TOP = 10;
+float FLAT_KP_TOP = 10;
 float BACK_KP_BASE = 10;
 float SCORE_KP_BASE = 250	;
+
 float MATCHLOAD_KP_BASE = 10;
 int ERR_MARGIN = 50;
 
@@ -164,7 +166,7 @@ task setTopLiftPosTask() //reachedMobileGoal is only used in auton to stop and h
 	int err = desiredTop - SensorValue[topLiftPoten];
 	int power = 127;
 
-	while(abs(err)>50 &&  !ignore) //adjust power of motors while error is outide of certain range, then set power to 0
+	while(abs(err)>25 &&  !ignore) //adjust power of motors while error is outide of certain range, then set power to 0
 	{
 		err = desiredTop - SensorValue[topLiftPoten];
 		power = (int) (err*127/4095*kpTop); //HAD MINUS SIGN
