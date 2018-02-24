@@ -8,7 +8,7 @@
 #pragma config(Sensor, dgtl8,  minorZoneToggle, sensorDigitalIn)
 #pragma config(Sensor, dgtl9,  majorZoneToggle, sensorDigitalIn)
 #pragma config(Sensor, dgtl11, leftQuad,       sensorQuadEncoder)
-#pragma config(Motor,  port2,           rollers,       tmotorVex393_MC29, openLoop)
+#pragma config(Motor,  port2,           rollers,       tmotorVex393_MC29, openLoop, reversed)
 #pragma config(Motor,  port3,           driveLeftFront, tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port4,           driveLeftBack, tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port5,           driveRightBack, tmotorVex393_MC29, openLoop)
@@ -40,8 +40,8 @@ void waitForRelease()
 
 void pre_auton()
 {
-		bLCDBacklight = true;
-		displayLCDCenteredString(0,"Initializing Gyro");
+	bLCDBacklight = true;
+	displayLCDCenteredString(0,"Initializing Gyro");
 	writeDebugStreamLine("begin gyro init");
 	SensorType[in4] = sensorNone;
 	wait1Msec(1000);
@@ -59,41 +59,41 @@ void pre_auton()
 
 	//while(true)
 	//{
-		if(nLCDButtons == 2)//center button
+	if(nLCDButtons == 2)//center button
+	{
+		waitForRelease();
+		showBattery = !showBattery;
+	}
+	if(!showBattery)
+	{
+		if(nLCDButtons == 1)//left button
+		{
+			count--;
+		}
+		else if(nLCDButtons == 4)//right button
 		{
 			waitForRelease();
-			showBattery = !showBattery;
+			count++;
 		}
-		if(!showBattery)
-		{
-			if(nLCDButtons == 1)//left button
-			{
-				count--;
-			}
-			else if(nLCDButtons == 4)//right button
-			{
-				waitForRelease();
-				count++;
-			}
-		}
+	}
 
 
-		if(count>5){count=count%5-1;}
-		else if(count<0){count = count+5 + 1;}
+	if(count>5){count=count%5-1;}
+	else if(count<0){count = count+5 + 1;}
 
-		clearLCDLine(0);
-		if(showBattery)
-		{
-			sprintf(mainBattery, "Main: %f", nImmediateBatteryLevel/1000.0);
-			displayLCDCenteredString(0,mainBattery);
-		}
-		else
-		{
-			displayLCDCenteredString(0,selection[count]);
-			waitForRelease();
-		}
+	clearLCDLine(0);
+	if(showBattery)
+	{
+		sprintf(mainBattery, "Main: %f", nImmediateBatteryLevel/1000.0);
+		displayLCDCenteredString(0,mainBattery);
+	}
+	else
+	{
+		displayLCDCenteredString(0,selection[count]);
+		waitForRelease();
+	}
 
-		wait1Msec(25);
+	wait1Msec(25);
 	//}
 
 	//aMajorSide = "blue";
@@ -132,25 +132,43 @@ void runBasicCompAuton(int minorSide, int zone)
 
 	//Go to mobile goal â Drop mobile base lift, lift cone, and drive straight
 	setBaseLiftPos(550, 10, -15); //ADD BACK IN
-	setForkliftPos(FORKLIFT_DOWN);
-	driveStraight(1375,127); //drive to mobile goal
+	setForkliftPower(-80);
+	driveStraight(1450,127); //drive to mobile goal
+	setForkliftPower(0);
 
 	//pick up goal
 	reachedMobileGoal = true; //force cone lift to drop
 	setForkliftPos(FORKLIFT_UP);
-	//while(SensorValue[forkliftButton] == 1){wait1Msec(20);}
-	//setForkliftPower(FORKLIFT_UP * 80);
-	wait1Msec(1800);
+	wait1Msec(1200);
+	setBaseLiftPos(800, 10);
+	turnToPos(70, true, 500);
+	driveStraight(70,127);
 	setForkliftPower(0);
 
-
+	//pick up second cone
+	setClawPower(-80);
+	wait1Msec(200);
+	setClawPower(0);
+	wait1Msec(200);
+	setClawPower(127);
+	holdTopLiftPos(basicTopPositions[0],1);
+	setBaseLiftPos(1200, 100); //full power down
+	while(SensorValue[topLiftPoten]>basicTopPositions[0]+100){wait1Msec(50);}
+	wait1Msec(300);
+	holdTopLiftPos(basicTopPositions[2],basicTopKp[2]);
+	setClawPower(0);
 
 	if(zone==20)
 	{
+		/* //FOR DRIVING BACK STRAIGHT
 		turnToPos(0);
 		//turnToPos(140*minorSide);
 		setBaseLiftPos(800, 10);
 		driveStraight(-1200,127);
+		*/
+		turnToPos(130*minorSide, true, 700);
+		setBaseLiftPos(800, 10);
+		driveStraight(-1800,127);
 	}
 	else if(zone == 10)
 	{
@@ -170,16 +188,23 @@ void runBasicCompAuton(int minorSide, int zone)
 	setBaseLiftPos(500, 10);
 
 	//Score goal
-	if(zone == 5)
+	if(zone == 20)
 	{
-		//just turn around and drive straight
-		turnToPos(-1800*minorSide);
+		/* //FOR BACKING STRAIGHT
+		//turn roughly parallel to white line, drive forward a bit, turn fully to face 10 pt zone, then drive straight
+		turnToPos(-1320*minorSide);
 		setClawPower(0);
-		setLeftMotors(127);
-		setRightMotors(0);
-		while(SensorValue[gyro] < -2145 * minorSide) {}
-		setAllDriveMotors(0);
+		driveStraight(400,127);
+
+		turnToPos(-2180*minorSide);
+		driveStraight(200,127);
 		setForkliftPos(FORKLIFT_DOWN);
+		driveStraight(200,127);
+		*/
+		turnToPos(1337*minorSide);
+		driveStraight(200,127);
+		setForkliftPos(FORKLIFT_DOWN);
+		driveStraight(200,127);
 	}
 	else if(zone == 10)
 	{
@@ -200,20 +225,20 @@ void runBasicCompAuton(int minorSide, int zone)
 		setAllDriveMotors(0);
 		setForkliftPos(FORKLIFT_DOWN);
 	}
-	else if(zone == 20)
+	else if(zone == 5)
 	{
-		//turn roughly parallel to white line, drive forward a bit, turn fully to face 10 pt zone, then drive straight
-		turnToPos(-1320*minorSide);
+		//just turn around and drive straight
+		turnToPos(-1800*minorSide);
 		setClawPower(0);
-		driveStraight(200,127);
-
-		turnToPos(1337*minorSide);
-		driveStraight(200,127);
+		setLeftMotors(127);
+		setRightMotors(0);
+		while(SensorValue[gyro] < -2145 * minorSide) {}
+		setAllDriveMotors(0);
 		setForkliftPos(FORKLIFT_DOWN);
-		driveStraight(300,127);
 	}
 
-	//setClawPower(0);
+	setClawPower(0);
+	wait1Msec(200);
 	driveStraight(-500,127,1);
 	writeDebugStreamLine("Time: %d", time1(T1));
 }
@@ -279,9 +304,9 @@ task autonomous()
 	//minorSide = -1; //1 = left, -1 = right
 	//zone = 5; //choose 5, 10, or 20
 	//clearTimer(T3);
-writeDebugStreamLine("the zone %d",aZone);
-writeDebugStreamLine("the side %d",aMinorSide);
-	runBasicCompAuton(aMinorSide,aZone);
+	writeDebugStreamLine("the zone %d",aZone);
+	writeDebugStreamLine("the side %d",aMinorSide);
+	runBasicCompAuton(1,20);
 	//while(time1(T3)<12500){wait1Msec(20);}
 	//stopTask(runBasicCompAuton);
 	//startTask(runEndAuton);
@@ -295,8 +320,11 @@ task usercontrol()
 	bool coneDownPressed = false;
 	bool coneZeroPressed = false;
 	bool autoStackPressed = false;
+	bool rollerPressed = false;
+	bool rollerMovingOpen = false;
+	bool rollerMovingClosed = false;
 	bool topLiftPressed = false;
-	char topLiftTargetLoc = 0; // 0 = up; 1 = flat; 2 = down
+	int topLiftTargetLoc = 0; // 2 = up; 1 = flat; 0 = down
 
 
 	while(true)
@@ -306,7 +334,7 @@ task usercontrol()
 		{
 			runBasicCompAuton(1,20);
 			//driveStraight(600);
-		//turnToPos(500);
+			//turnToPos(500);
 			//setForkliftPos(FORKLIFT_UP);
 			//writeDebugStreamLine("Running basic comp auton");
 		}
@@ -351,75 +379,41 @@ task usercontrol()
 		//TOP LIFT
 		if(rightTriggerUp == 1)
 		{
-			setTopLiftPower(127);
-			//setTopLiftPos(SCORE_TOP,SCORE_KP_TOP);
 
-		/*
-			if(topLiftTargetLoc == -1)
-				topLiftTargetLoc = 2;
+			if(!topLiftPressed)
+			{
+				//increase target by 1 up to max position
+				topLiftTargetLoc++;
+				writeDebugStreamLine("unfiltered topLiftTargetLoc: %f", topLiftTargetLoc);
+				if(topLiftTargetLoc > 2){topLiftTargetLoc = 2;}
+				writeDebugStreamLine("only one topLiftTargetLoc: %f", topLiftTargetLoc);
+				//bring to target pos
+				holdTopLiftPos(basicTopPositions[topLiftTargetLoc],basicTopKp[topLiftTargetLoc]);
+			}
 
-			if(topLiftTargetLoc == 0 && !topLiftPressed)
-			{
-				setTopLiftPos(BACK_TOP, SCORE_KP_TOP);
-				topLiftPressed = true;
-				topLiftTargetLoc = (topLiftTargetLoc - 1) % 3;
-				writeDebugStreamLine("%d", topLiftTargetLoc);
-			}
-			else if(topLiftTargetLoc == 1 && !topLiftPressed)
-			{
-				setTopLiftPos(FLAT_TOP, FLAT_KP_TOP);
-				topLiftTargetLoc = (topLiftTargetLoc - 1) % 3;
-				writeDebugStreamLine("%d", topLiftTargetLoc);
-				topLiftPressed = true;
-			}
-			else if(topLiftTargetLoc == 2 && !topLiftPressed)
-			{
-				setTopLiftPos(SCORE_TOP, SCORE_KP_TOP);
-				topLiftTargetLoc = (topLiftTargetLoc - 1) % 3;
-				writeDebugStreamLine("%d", topLiftTargetLoc);
-				topLiftPressed = true;
-			}
-			else
-				topLiftPressed = false;
-				*/
+			topLiftPressed = true;
 		}
 		else if(rightTriggerDown == 1)
 		{
-			setTopLiftPower(-80);
-			//setTopLiftPos(BACK_TOP,BACK_KP_TOP);
-			/*
-			if(topLiftTargetLoc == -1)
-				topLiftTargetLoc = 2;
+			//setTopLiftPower(-80);
 
-			if(topLiftTargetLoc == 0 && !topLiftPressed)
+			if(!topLiftPressed)
 			{
-				setTopLiftPos(BACK_TOP, SCORE_KP_TOP);
-				topLiftPressed = true;
-				topLiftTargetLoc = (topLiftTargetLoc - 1) % 3;
-				writeDebugStreamLine("%d", topLiftTargetLoc);
+				//decrease target by 1 up to max position
+				topLiftTargetLoc--;
+				if(topLiftTargetLoc < 0){topLiftTargetLoc = 0;}
+				writeDebugStreamLine("only one topLiftTargetLoc: %f", topLiftTargetLoc);
+				//bring to target pos
+				holdTopLiftPos(basicTopPositions[topLiftTargetLoc],basicTopKp[topLiftTargetLoc]);
 			}
-			else if(topLiftTargetLoc == 1 && !topLiftPressed)
-			{
-				setTopLiftPos(FLAT_TOP, FLAT_KP_TOP);
-				topLiftTargetLoc = (topLiftTargetLoc - 1) % 3;
-				writeDebugStreamLine("%d", topLiftTargetLoc);
-				topLiftPressed = true;
-			}
-			else if(topLiftTargetLoc == 2 && !topLiftPressed)
-			{
-				setTopLiftPos(SCORE_TOP, SCORE_KP_TOP);
-				topLiftTargetLoc = (topLiftTargetLoc - 1) % 3;
-				writeDebugStreamLine("%d", topLiftTargetLoc);
-				topLiftPressed = true;
-			}
-			else
-				topLiftPressed = false;
-				*/
+
+			topLiftPressed = true;
 		}
 
 		else
 		{
-			setTopLiftPower(0);
+			topLiftPressed = false;
+			//setTopLiftPower(0);
 		}
 
 
@@ -458,39 +452,63 @@ task usercontrol()
 			setForkliftPower(0);
 
 
-		//claw
+		//roller
 		if(leftTriggerDown == 1)
 		{
-			if(userControlClaw)
-				setClawPower(127); //open claw
+			if(userControlClaw) //check if used in automation
+			{
+				if(!rollerPressed) //make button into toggle
+				{
+					if(!rollerMovingClosed)//if not moving, close roller. if moving, stop roller
+						setClawPower(-80);
+					else
+						setClawPower(0);
+
+					rollerMovingClosed = !rollerMovingClosed;
+					rollerMovingOpen = false;
+				}
+				rollerPressed = true;
+			}
 			else
 				userControlClaw = true;
 		}
 		else if(leftTriggerUp == 1)
 		{
 			if(userControlClaw)
-				setClawPower(-127); //close claw
+			{
+				if(!rollerPressed)
+				{
+					if(!rollerMovingOpen)//if not moving, open roller. if moving, stop roller
+						setClawPower(80);
+					else
+						setClawPower(0);
+
+					rollerMovingOpen = !rollerMovingOpen;
+					rollerMovingClosed = false;
+				}
+				rollerPressed = true;
+			}
 			else
 				userControlClaw = true;
 		}
 		else
 		{
 			if(userControlClaw)
-				setClawPower(0);
+				rollerPressed = false;
 		}
 
 		//AUTO METHODS
-    if(btnEightLeft == 1){autoBack();}
-    else if(btnEightRight == 1 && !autoStackPressed) //if button is now pressed, update cones and update bool to reflect button pressed
-    {
-        autoStackPressed = true;
-        autoStack();
-        writeDebugStreamLine("Cones Stacked: %d", conesStacked);
-    }
-    else if(btnEightRight == 0 && autoStackPressed) //if button is no longer pressed, update bool to reflect lack of press
-    {
-        autoStackPressed = false;
-    }
+		if(btnEightLeft == 1){autoBack();}
+		else if(btnEightRight == 1 && !autoStackPressed) //if button is now pressed, update cones and update bool to reflect button pressed
+		{
+			autoStackPressed = true;
+			autoStack();
+			writeDebugStreamLine("Cones Stacked: %d", conesStacked);
+		}
+		else if(btnEightRight == 0 && autoStackPressed) //if button is no longer pressed, update bool to reflect lack of press
+		{
+			autoStackPressed = false;
+		}
 
 		//if(btnSevenRight == 1)
 		//{
@@ -503,13 +521,13 @@ task usercontrol()
 		/*
 		else if(btnEightRight == 1 && !autoStackPressed) //if button is now pressed, update cones and update bool to reflect button pressed
 		{
-			autoStackPressed = true;
-			autoStack();
-			writeDebugStreamLine("Cones Stacked: %d", conesStacked);
+		autoStackPressed = true;
+		autoStack();
+		writeDebugStreamLine("Cones Stacked: %d", conesStacked);
 		}
 		else if(btnEightRight == 0 && autoStackPressed) //if button is no longer pressed, update bool to reflect lack of press
 		{
-			autoStackPressed = false;
+		autoStackPressed = false;
 		}
 		*/
 
