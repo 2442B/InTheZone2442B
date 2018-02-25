@@ -87,14 +87,12 @@ int forkliftTime = 1800;
 /////BASIC MOTOR METHODS/////
 void setLeftMotors(int power)
 {
-	//motor[driveMotorsLeft] = power;
 	motor[driveLeftBack] = power;
 	motor[driveLeftFront] = power;
 }
 
 void setRightMotors(int power)
 {
-	//motor[driveMotorsRight] = power;
 	motor[driveRightBack] = power;
 	motor[driveRightFront] = power;
 }
@@ -106,20 +104,12 @@ void setAllDriveMotors(int power)
 
 void setTopLiftPower(int power)
 {
-	/*
-	motor[topLiftLeft] = power;
-	motor[topLiftRight] = power;
-	*/
 	motor[fourBar] = power;
 }
 
 
 void setBaseLiftPower(int power)
 {
-	/*
-	motor[baseLiftLeft] = power;
-	motor[baseLiftRight] = power;
-	*/
 	motor[baseLift] = power;
 }
 
@@ -132,7 +122,6 @@ void setForkliftPower(int power)
 
 void setClawPower(int power)
 {
-	//motor[claw] = power;
 	motor[rollers] = power;
 
 }
@@ -163,6 +152,7 @@ task correctStraight()
 	}
 }
 
+/*
 task setTopLiftPosTask() //reachedMobileGoal is only used in auton to stop and hold lift in place if robot reaches goal unexpectedly early
 {
 	bool ignore = false;
@@ -184,6 +174,7 @@ task setTopLiftPosTask() //reachedMobileGoal is only used in auton to stop and h
 	if(reachedMobileGoal)
 		setTopLiftPower(0);
 }
+*/
 
 task holdTopLiftPosTask()
 {
@@ -235,6 +226,45 @@ task setBaseLiftPosTask()
 	}
 	setBaseLiftPower(powAfterBase);
 
+}
+
+task holdBaseLiftPosTask()
+{
+    userControlBase = false;
+    int power;
+    
+    //proportional
+    int errBase = desiredBase - SensorValue[baseLiftPoten];
+
+    //deriv
+    int derivBase = 0;
+    int previousErrBase = 0;
+    int previousDerivBase = 0;
+    
+    //integeral
+    int totalErrBase = 0;
+    
+    clearTimer(T3);
+    
+    while(1) //adjust power of motors while error is outide of certain range, then set power to 0
+    {
+        err = desiredBase - SensorValue[baseLiftPoten];
+        derivBase = previousErrBase - err;
+        
+        if(sgn(derivBase)!=sgn(previousDerivBase))
+        {
+            writeDebugStreamLine("Switch at err: %d, t: %f", errBase, time1(T3));
+            clearTimer(T3);
+        }
+        
+        power = (int) (errBase*0 + derivBase*0 +totalErrBase*0)
+        setBaseLiftPower(power);
+        
+        previousErrBase = errBase;
+        totalErrBase += errBase;
+        
+        wait1Msec(50);
+    }
 }
 
 task setClawUntilPosTask()
@@ -330,6 +360,7 @@ void turnToPos(int pos,bool withMobileGoal=true,int timeLimit = 2500)
 	//writeDebugStreamLine("Cleared turntopos, t4: %i", time1[T4]);
 }
 
+/*
 void setTopLiftPos(int aDesired, float aKp, int aPowAfter = 0)
 {
 	reachedMobileGoal = false;
@@ -337,7 +368,7 @@ void setTopLiftPos(int aDesired, float aKp, int aPowAfter = 0)
 	kpTop = aKp;
 	powAfterTop = aPowAfter;
 	startTask(setTopLiftPosTask);
-}
+}*/
 
 void holdTopLiftPos(int aDesired, float aKp, int aPowAfter = 0)
 {
@@ -356,6 +387,13 @@ void setBaseLiftPos(int aDesired, float aKp, int aPowAfter = 0)
 	kpBase = aKp;
 	powAfterBase = aPowAfter;
 	startTask(setBaseLiftPosTask);
+}
+
+void holdBaseLiftPos(int aDesired)
+{
+    reachedMobileGoal = false;
+    desiredBase = aDesired;
+    startTask(holdBaseLiftPosTask);
 }
 
 void setClawUntilPos(int aDesiredClaw, int aClawPower)

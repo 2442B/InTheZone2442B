@@ -41,7 +41,8 @@ void waitForRelease()
 void pre_auton()
 {
 	bLCDBacklight = true;
-	displayLCDCenteredString(0,"Initializing Gyro");
+	displayLCDCenteredString(0,"Initializing");
+    displayLCDCenteredString(1,"Gyro");
 	writeDebugStreamLine("begin gyro init");
 	SensorType[in4] = sensorNone;
 	wait1Msec(1000);
@@ -51,14 +52,17 @@ void pre_auton()
 	writeDebugStreamLine("finished gyro init %d", SensorScale[in4]);
 
 	string mainBattery;
+    string powerExpander;
 	string selection[6] = {"20-pt zone [L]", "20-pt zone [R]", "10-pt zone [L]", "10-pt zone [R]", "5-pt zone [L]", "5-pt zone [R]"};
+    string selectionSide[6] = {1,-1,1,-1,1,-1};
+    string selectionZone[6] = {20,20,10,10,5,5};
 	bool showBattery = true;
 	int autonSelect = 0;
 	int count = 0;
 	int sideSelect = 1;
 
-	//while(true)
-	//{
+	while(bIfiRobotDisabled)
+	{
 	if(nLCDButtons == 2)//center button
 	{
 		waitForRelease();
@@ -85,16 +89,20 @@ void pre_auton()
 	if(showBattery)
 	{
 		sprintf(mainBattery, "Main: %f", nImmediateBatteryLevel/1000.0);
+        sprintf(powerExpander, "2nd Battery:");
 		displayLCDCenteredString(0,mainBattery);
+        displayLCDCenteredString(1,powerExpander);
 	}
 	else
 	{
 		displayLCDCenteredString(0,selection[count]);
+        aMinorSide = selectionSide[count];
+        aZone = selectionZone[count];
 		waitForRelease();
 	}
 
 	wait1Msec(25);
-	//}
+	}
 
 	//aMajorSide = "blue";
 
