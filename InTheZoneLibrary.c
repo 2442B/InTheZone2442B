@@ -29,7 +29,7 @@
 enum ForkliftPos {FORKLIFT_UP=1,FORKLIFT_DOWN=-1};
 enum PotenValuesTop {BACK_TOP = 1200, UPRIGHT_TOP = 2008, MATCHLOAD_TOP = 580, SCORE_TOP = 3750, FLAT_TOP=1900};
 enum PotenValuesClaw {BACK_CLAW = 3700, MATCHLOAD_CLAW = 750};
-enum PotenValuesBase {BACK_BASE = 4095, MATCHLOAD_BASE = 3250, HIGHEST_BASE =  2608}; //values increase as lift moves down
+enum PotenValuesBase {BACK_BASE = 1080, MATCHLOAD_BASE = 700, HIGHEST_BASE =  0}; //values increase as lift moves down
 int basicTopPositions[3] = {1230, 1900, 3700};
 int basicTopKp[3] = {0.3,0.3,0.3};
 int topLiftPositions[12] = {3700,2600,2775,2600,2600,2600,2600,2600,2600,2600,2600,2600};
@@ -232,7 +232,7 @@ task holdBaseLiftPosTask()
 {
     userControlBase = false;
     int power;
-    
+
     //proportional
     int errBase = desiredBase - SensorValue[baseLiftPoten];
 
@@ -240,29 +240,32 @@ task holdBaseLiftPosTask()
     int derivBase = 0;
     int previousErrBase = 0;
     int previousDerivBase = 0;
-    
+
     //integeral
     int totalErrBase = 0;
-    
+
     clearTimer(T3);
-    
+
     while(1) //adjust power of motors while error is outide of certain range, then set power to 0
     {
-        err = desiredBase - SensorValue[baseLiftPoten];
-        derivBase = previousErrBase - err;
-        
-        if(sgn(derivBase)!=sgn(previousDerivBase))
-        {
-            writeDebugStreamLine("Switch at err: %d, t: %f", errBase, time1(T3));
-            clearTimer(T3);
-        }
-        
-        power = (int) (errBase*0 + derivBase*0 +totalErrBase*0)
+        errBase = desiredBase - SensorValue[baseLiftPoten];
+        derivBase = errBase - previousErrBase;
+
+        //if(sgn(derivBase)!=sgn(previousDerivBase))
+        //{
+        //    writeDebugStreamLine("Switch at err: %d, t: %f", errBase, time1(T3));
+        //    clearTimer(T3);
+        //}
+       datalogDataGroupStart();
+			datalogAddValue(0,errBase);
+			datalogDataGroupEnd();
+
+        power = (int) (errBase*0.18 + derivBase*0.3 +totalErrBase*0)
         setBaseLiftPower(power);
-        
+
         previousErrBase = errBase;
         totalErrBase += errBase;
-        
+
         wait1Msec(50);
     }
 }
@@ -415,7 +418,7 @@ task autoScoreTask()
 	writeDebugStreamLine("first while loop in score");
 	while(SensorValue[baseLiftPoten] > baseLiftPositions[conesStacked] + topLiftStart + ERR_MARGIN){wait1Msec(20);}
 	writeDebugStreamLine("second while in score");
-	setTopLiftPos(topLiftPositions[conesStacked],SCORE_KP_TOP);
+	holdTopLiftPos(topLiftPositions[conesStacked],SCORE_KP_TOP);
 	while(SensorValue[topLiftPoten] < topLiftPositions[conesStacked] - ERR_MARGIN){wait1Msec(20);}
 	writeDebugStreamLine("third while in score");
 	if(secondBaseLiftPositions[conesStacked] > 0 )
@@ -429,7 +432,7 @@ task autoBackTask()
 	userControlClaw = false;
 	if(SensorValue[topLiftPoten]>UPRIGHT_TOP)
 		setClawPower(127); //open claw
-	setTopLiftPos(BACK_TOP,BACK_KP_TOP);
+	holdTopLiftPos(BACK_TOP,BACK_KP_TOP);
 	while(SensorValue[topLiftPoten]>UPRIGHT_TOP){}
 	setBaseLiftPos(BACK_BASE,BACK_KP_BASE,0);
 	setClawPower(0); //close claw

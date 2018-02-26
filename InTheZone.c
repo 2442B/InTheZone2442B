@@ -42,7 +42,7 @@ void pre_auton()
 {
 	bLCDBacklight = true;
 	displayLCDCenteredString(0,"Initializing");
-    displayLCDCenteredString(1,"Gyro");
+	displayLCDCenteredString(1,"Gyro");
 	writeDebugStreamLine("begin gyro init");
 	SensorType[in4] = sensorNone;
 	wait1Msec(1000);
@@ -52,10 +52,10 @@ void pre_auton()
 	writeDebugStreamLine("finished gyro init %d", SensorScale[in4]);
 
 	string mainBattery;
-    string powerExpander;
+	string powerExpander;
 	string selection[6] = {"20-pt zone [L]", "20-pt zone [R]", "10-pt zone [L]", "10-pt zone [R]", "5-pt zone [L]", "5-pt zone [R]"};
-    string selectionSide[6] = {1,-1,1,-1,1,-1};
-    string selectionZone[6] = {20,20,10,10,5,5};
+	int selectionSide[6] = {1,-1,1,-1,1,-1};
+	int selectionZone[6] = {20,20,10,10,5,5};
 	bool showBattery = true;
 	int autonSelect = 0;
 	int count = 0;
@@ -63,45 +63,45 @@ void pre_auton()
 
 	while(bIfiRobotDisabled)
 	{
-	if(nLCDButtons == 2)//center button
-	{
-		waitForRelease();
-		showBattery = !showBattery;
-	}
-	if(!showBattery)
-	{
-		if(nLCDButtons == 1)//left button
-		{
-			count--;
-		}
-		else if(nLCDButtons == 4)//right button
+		if(nLCDButtons == 2)//center button
 		{
 			waitForRelease();
-			count++;
+			showBattery = !showBattery;
 		}
-	}
+		if(!showBattery)
+		{
+			if(nLCDButtons == 1)//left button
+			{
+				count--;
+			}
+			else if(nLCDButtons == 4)//right button
+			{
+				waitForRelease();
+				count++;
+			}
+		}
 
 
-	if(count>5){count=count%5-1;}
-	else if(count<0){count = count+5 + 1;}
+		if(count>5){count=count%5-1;}
+		else if(count<0){count = count+5 + 1;}
 
-	clearLCDLine(0);
-	if(showBattery)
-	{
-		sprintf(mainBattery, "Main: %f", nImmediateBatteryLevel/1000.0);
-        sprintf(powerExpander, "2nd Battery:");
-		displayLCDCenteredString(0,mainBattery);
-        displayLCDCenteredString(1,powerExpander);
-	}
-	else
-	{
-		displayLCDCenteredString(0,selection[count]);
-        aMinorSide = selectionSide[count];
-        aZone = selectionZone[count];
-		waitForRelease();
-	}
+		clearLCDLine(0);
+		if(showBattery)
+		{
+			sprintf(mainBattery, "Main: %f", nImmediateBatteryLevel/1000.0);
+			sprintf(powerExpander, "2nd Battery:");
+			displayLCDCenteredString(0,mainBattery);
+			displayLCDCenteredString(1,powerExpander);
+		}
+		else
+		{
+			displayLCDCenteredString(0,selection[count]);
+			aMinorSide = selectionSide[count];
+			aZone = selectionZone[count];
+			waitForRelease();
+		}
 
-	wait1Msec(25);
+		wait1Msec(25);
 	}
 
 	//aMajorSide = "blue";
@@ -505,7 +505,16 @@ task usercontrol()
 				rollerPressed = false;
 		}
 
+		if(btnEightLeft == 1)
+		{
+			holdBaseLiftPos(BACK_BASE);
+		}
+		if(btnEightRight == 1)
+		{
+			holdBaseLiftPos(MATCHLOAD_BASE);
+		}
 		//AUTO METHODS
+		/*
 		if(btnEightLeft == 1){autoBack();}
 		else if(btnEightRight == 1 && !autoStackPressed) //if button is now pressed, update cones and update bool to reflect button pressed
 		{
@@ -526,18 +535,16 @@ task usercontrol()
 
 		if(btnEightLeft == 1){autoBack();}
 
-		/*
-		else if(btnEightRight == 1 && !autoStackPressed) //if button is now pressed, update cones and update bool to reflect button pressed
-		{
-		autoStackPressed = true;
-		autoStack();
-		writeDebugStreamLine("Cones Stacked: %d", conesStacked);
-		}
-		else if(btnEightRight == 0 && autoStackPressed) //if button is no longer pressed, update bool to reflect lack of press
-		{
-		autoStackPressed = false;
-		}
-		*/
+		//else if(btnEightRight == 1 && !autoStackPressed) //if button is now pressed, update cones and update bool to reflect button pressed
+		//{
+		//autoStackPressed = true;
+		//autoStack();
+		//writeDebugStreamLine("Cones Stacked: %d", conesStacked);
+		//}
+		//else if(btnEightRight == 0 && autoStackPressed) //if button is no longer pressed, update bool to reflect lack of press
+		//{
+		//autoStackPressed = false;
+		//}
 
 		//cone count
 		if(secondBtnSevenUp == 1 && !coneUpPressed) //if button is now pressed, update cones and update bool to reflect button pressed
@@ -569,5 +576,6 @@ task usercontrol()
 		{
 			coneZeroPressed = false;
 		}
+		*/
 	}
 }
