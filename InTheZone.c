@@ -328,9 +328,10 @@ task usercontrol()
 	bool coneDownPressed = false;
 	bool coneZeroPressed = false;
 	bool autoStackPressed = false;
-	bool rollerPressed = false;
-	bool rollerMovingOpen = false;
-	bool rollerMovingClosed = false;
+	bool runIntake = false;
+	//bool rollerPressed = false;
+	//bool rollerMovingOpen = false;
+	//bool rollerMovingClosed = false;
 	bool topLiftPressed = false;
 	int topLiftTargetLoc = 0; // 2 = up; 1 = flat; 0 = down
 
@@ -461,50 +462,65 @@ task usercontrol()
 
 
 		//roller
+		if(leftTriggerUp == 1) {
+			motor[rollers] = 127;
+			runIntake = true;
+		}
+		else if(leftTriggerDown == 1) {
+			motor[rollers] = -127;
+			runIntake = false;
+		}
+		else {
+			if (runIntake)
+				motor[rollers] = 20;
+			else
+				motor[rollers] = 0;
+		}
+		/*
 		if(leftTriggerDown == 1)
 		{
-			if(userControlClaw) //check if used in automation
-			{
-				if(!rollerPressed) //make button into toggle
-				{
-					if(!rollerMovingClosed)//if not moving, close roller. if moving, stop roller
-						setClawPower(-80);
-					else
-						setClawPower(0);
+		if(userControlClaw) //check if used in automation
+		{
+		if(!rollerPressed) //make button into toggle
+		{
+		if(!rollerMovingClosed)//if not moving, close roller. if moving, stop roller
+		setClawPower(-80);
+		else
+		setClawPower(0);
 
-					rollerMovingClosed = !rollerMovingClosed;
-					rollerMovingOpen = false;
-				}
-				rollerPressed = true;
-			}
-			else
-				userControlClaw = true;
+		rollerMovingClosed = !rollerMovingClosed;
+		rollerMovingOpen = false;
+		}
+		rollerPressed = true;
+		}
+		else
+		userControlClaw = true;
 		}
 		else if(leftTriggerUp == 1)
 		{
-			if(userControlClaw)
-			{
-				if(!rollerPressed)
-				{
-					if(!rollerMovingOpen)//if not moving, open roller. if moving, stop roller
-						setClawPower(80);
-					else
-						setClawPower(0);
+		if(userControlClaw)
+		{
+		if(!rollerPressed)
+		{
+		if(!rollerMovingOpen)//if not moving, open roller. if moving, stop roller
+		setClawPower(80);
+		else
+		setClawPower(0);
 
-					rollerMovingOpen = !rollerMovingOpen;
-					rollerMovingClosed = false;
-				}
-				rollerPressed = true;
-			}
-			else
-				userControlClaw = true;
+		rollerMovingOpen = !rollerMovingOpen;
+		rollerMovingClosed = false;
+		}
+		rollerPressed = true;
+		}
+		else
+		userControlClaw = true;
 		}
 		else
 		{
-			if(userControlClaw)
-				rollerPressed = false;
+		if(userControlClaw)
+		rollerPressed = false;
 		}
-
+		*/
 		if(btnEightLeft == 1)
 		{
 			holdBaseLiftPos(BACK_BASE);
@@ -518,13 +534,13 @@ task usercontrol()
 		if(btnEightLeft == 1){autoBack();}
 		else if(btnEightRight == 1 && !autoStackPressed) //if button is now pressed, update cones and update bool to reflect button pressed
 		{
-			autoStackPressed = true;
-			autoStack();
-			writeDebugStreamLine("Cones Stacked: %d", conesStacked);
+		autoStackPressed = true;
+		autoStack();
+		writeDebugStreamLine("Cones Stacked: %d", conesStacked);
 		}
 		else if(btnEightRight == 0 && autoStackPressed) //if button is no longer pressed, update bool to reflect lack of press
 		{
-			autoStackPressed = false;
+		autoStackPressed = false;
 		}
 
 		//if(btnSevenRight == 1)
@@ -549,32 +565,32 @@ task usercontrol()
 		//cone count
 		if(secondBtnSevenUp == 1 && !coneUpPressed) //if button is now pressed, update cones and update bool to reflect button pressed
 		{
-			conesStacked++;
-			coneUpPressed = true;
+		conesStacked++;
+		coneUpPressed = true;
 		}
 		else if(secondBtnSevenUp == 0 && coneUpPressed) //if button is no longer pressed, update bool to reflect lack of press
 		{
-			coneUpPressed = false;
+		coneUpPressed = false;
 		}
 
 		if(secondBtnSevenDown == 1 && !coneDownPressed) //if button is now pressed, update cones and update bool to reflect button pressed
 		{
-			conesStacked--;
-			coneDownPressed = true;
+		conesStacked--;
+		coneDownPressed = true;
 		}
 		else if(secondBtnSevenDown == 0 && coneDownPressed) //if button is no longer pressed, update bool to reflect lack of press
 		{
-			coneDownPressed = false;
+		coneDownPressed = false;
 		}
 
 		if(secondBtnSevenLeft == 1 && !coneZeroPressed) //if button is now pressed, update cones and update bool to reflect button pressed
 		{
-			conesStacked = 0;
-			coneZeroPressed = true;
+		conesStacked = 0;
+		coneZeroPressed = true;
 		}
 		else if(secondBtnSevenLeft == 0 && coneZeroPressed) //if button is no longer pressed, update bool to reflect lack of press
 		{
-			coneZeroPressed = false;
+		coneZeroPressed = false;
 		}
 		*/
 	}
