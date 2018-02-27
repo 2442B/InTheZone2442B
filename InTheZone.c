@@ -163,7 +163,7 @@ void runBasicCompAuton(int minorSide, int zone)
 	setBaseLiftPos(1200, 100); //full power down
 	while(SensorValue[topLiftPoten]>basicTopPositions[0]+100){wait1Msec(50);}
 	wait1Msec(300);
-	holdTopLiftPos(basicTopPositions[2],basicTopKp[2]);
+	setTopLiftPos(basicTopPositions[2],basicTopKp[2]);
 	setClawPower(0);
 
 	if(zone==20)
@@ -339,6 +339,7 @@ task usercontrol()
 	while(true)
 	{
 
+		/*
 		if(vexRT[Btn7L]==1)
 		{
 			runBasicCompAuton(1,20);
@@ -347,6 +348,7 @@ task usercontrol()
 			//setForkliftPos(FORKLIFT_UP);
 			//writeDebugStreamLine("Running basic comp auton");
 		}
+		*/
 		//if(vexRT[Btn7R]==1)
 		//{
 		//	string side = "blue";

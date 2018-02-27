@@ -68,6 +68,7 @@ int desiredTop;
 int powAfterTop;
 float kpTop = 1;
 bool reachedMobileGoal = false;
+int topLiftTimeLimit = 2500;
 
 //for setBaseLiftPos task / setBaseLiftPos method
 int desiredBase;
@@ -246,7 +247,7 @@ task holdBaseLiftPosTask()
 
     clearTimer(T3);
 
-    while(1) //adjust power of motors while error is outide of certain range, then set power to 0
+    while(time1[T3] < topLiftTimeLimit) //adjust power of motors while error is outide of certain range, then set power to 0
     {
         errBase = desiredBase - SensorValue[baseLiftPoten];
         derivBase = errBase - previousErrBase;
@@ -374,6 +375,16 @@ void setTopLiftPos(int aDesired, float aKp, int aPowAfter = 0)
 }*/
 
 void holdTopLiftPos(int aDesired, float aKp, int aPowAfter = 0)
+{
+	reachedMobileGoal = false;
+	desiredTop = aDesired;
+	kpTop = aKp;
+	writeDebugStreamLine("aKp is %f",aKp);
+	powAfterTop = aPowAfter;
+	startTask(holdTopLiftPosTask);
+}
+
+void setTopLiftPos(int aDesired, float aKp, int aPowAfter = 0, int timeLimit = 2500)
 {
 	reachedMobileGoal = false;
 	desiredTop = aDesired;
