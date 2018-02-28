@@ -265,45 +265,78 @@ void runProgSkills()
 {
 	//run auton to score in 20Z
 	string blank = "";
-	//runBasicCompAuton(blank,1,20);
-	//reset to left?
-	//run low power forward?
-	//turn w/ gyro to back into left wall
-	//back into wall
-	//drive to near left corner and score in 10Z left
-	//drive to correct spot to align with goal
-	//turn w/ gyro
-	//drive forward and pick up goal
-	//turn 180 to face scoring spot
-	//drive forward
-	//score 10Z
-	//drive to near right corner and score in 10Z right
-	//turn
-	//drive forward until aligned
-	//turn
-	//drive forward and pick up goal
-	//turn 180 to face scoring spot
-	//drive forward
-	//score 10Z
-	//drive to far right corner and score in 10Z middle
-	//turn 180
-	//drive forward and pick up goal
-	//turn 180
-	//drive forward until 5Z
-	//turn
-	//drive
-	//turn to center
-	//score goal in 10Z
-	//drive to far left corner and score in far 20Z
-	//turn to left
-	//drive until aligned
-	//turn until aligned
-	//drive forward and pick up goal
-	//drive forward
-	//turn
-	//drive
-	//turn to 20Z
-	//score in 20Z
+	clearTimer(T1);
+	reachedMobileGoal = false; //will act as hard stop for lifting cone â?? when reachedMobileGoal is true, the lift will immediately drop
+
+	//Go to mobile goal â Drop mobile base lift, lift cone, and drive straight
+	setBaseLiftPos(550, 10, -15);
+	setForkliftPower(-60);
+	driveStraight(1450,127); //drive to mobile goal
+	setForkliftPower(0);
+
+	//pick up goal
+	reachedMobileGoal = true; //force cone lift to drop
+	setForkliftPos(FORKLIFT_UP);
+	wait1Msec(750);
+	setBaseLiftPos(800, 10);
+	turnToPos(70, true, 500);
+	driveStraight(70,127);
+	setForkliftPower(0);
+
+	driveStraight(-1800, 127); //Back up
+	turnToPos(1350, true, 2500);
+
+	setClawPower(127); //Drop cone
+	wait1Msec(500);
+	setBaseLiftPos(500, 10); //Raise baseLift
+	setClawPower(0);
+
+	driveStraight(200,127); //Into 10
+	setForkliftPos(FORKLIFT_DOWN); //Forklift down
+	driveStraight(200,127); //Drop off
+	setForkliftPower(0);
+
+	setBaseLiftPos(750, 10);
+	driveStraight(-400, 127);
+
+	turnToPos(-450, false, 2500); //Around along white line
+	driveStraight(-300, 127); //Back up
+	turnToPos(450, false, 2500); //Turn perpendicular to bar
+
+	driveStraight(-200, 63);
+
+	//CALIBRATE GYRO
+
+	/*
+
+	--Second Mobile Goal--
+
+	back
+	reset gyro -- Angles are now different
+	turn clockwise
+	forward
+	pick up
+	backwards
+	turn counterclockwise 180
+	mobile base down
+
+	--Third Mobile Goal--
+
+	back
+	clockwise 180*
+	forward
+	wait, then base lift up
+	base lift down
+	turn counterclockwise 135*
+	forward
+	base lift up
+	back
+	clockwise 45*
+	back clockwise 90*
+	forward
+	mobile base down
+
+	*/
 }
 
 task autonomous()
@@ -314,11 +347,11 @@ task autonomous()
 	//clearTimer(T3);
 	writeDebugStreamLine("the zone %d",aZone);
 	writeDebugStreamLine("the side %d",aMinorSide);
-	runBasicCompAuton(-1,10);
+	//runBasicCompAuton(-1,10);
 	//while(time1(T3)<12500){wait1Msec(20);}
 	//stopTask(runBasicCompAuton);
 	//startTask(runEndAuton);
-	//runProgSkills(side);
+	runProgSkills();
 }
 
 task usercontrol()
