@@ -8,8 +8,7 @@
 #pragma config(Sensor, dgtl8,  minorZoneToggle, sensorDigitalIn)
 #pragma config(Sensor, dgtl9,  majorZoneToggle, sensorDigitalIn)
 #pragma config(Sensor, dgtl11, leftQuad,       sensorQuadEncoder)
-#pragma config(Motor,  port1,           rollers,       tmotorVex393_HBridge, openLoop)
-#pragma config(Motor,  port2,           topLift,       tmotorVex393_MC29, openLoop)
+#pragma config(Motor,  port2,           rollers,       tmotorVex393_HBridge, openLoop)
 #pragma config(Motor,  port3,           driveLeftFront, tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port4,           driveLeftBack, tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port5,           driveRightBack, tmotorVex393_MC29, openLoop)
@@ -185,6 +184,7 @@ task holdTopLiftPosTask()
 	int holdTopTotal = 0;
 	int holdTopPrevious = 0;
 
+
 	while(1) //adjust power of motors while error is outide of certain range, then set power to 0
 	{
 			err = desiredTop - SensorValue[topLiftPoten];
@@ -308,7 +308,7 @@ void driveStraight(int dest, int basePower = 127, float leftMultiplier = 0.5) //
 	leftPowerAdjustment = 0;
 	startTask(correctStraight);
 	//writeDebugStreamLine("err: %d, power: %d sdfdgdsgfgfsggffs",err,power);
-	while(fabs(err)>20 && fabs(dest - (-1*SensorValue[rightQuad]))>20)
+	while(fabs(err)>20 && fabs(dest - (SensorValue[leftQuad]))>20)
 	{
 		err = dest - SensorValue[leftQuad];
 		power = basePower*sgn(err);

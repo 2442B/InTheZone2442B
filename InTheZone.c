@@ -8,7 +8,7 @@
 #pragma config(Sensor, dgtl8,  minorZoneToggle, sensorDigitalIn)
 #pragma config(Sensor, dgtl9,  majorZoneToggle, sensorDigitalIn)
 #pragma config(Sensor, dgtl11, leftQuad,       sensorQuadEncoder)
-#pragma config(Motor,  port2,           rollers,       tmotorVex393_MC29, openLoop, reversed)
+#pragma config(Motor,  port2,           rollers,       tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port3,           driveLeftFront, tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port4,           driveLeftBack, tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port5,           driveRightBack, tmotorVex393_MC29, openLoop)
@@ -314,7 +314,7 @@ task autonomous()
 	//clearTimer(T3);
 	writeDebugStreamLine("the zone %d",aZone);
 	writeDebugStreamLine("the side %d",aMinorSide);
-	runBasicCompAuton(1,20);
+	runBasicCompAuton(-1,10);
 	//while(time1(T3)<12500){wait1Msec(20);}
 	//stopTask(runBasicCompAuton);
 	//startTask(runEndAuton);
@@ -466,15 +466,15 @@ task usercontrol()
 		//roller
 		if(leftTriggerUp == 1) {
 			motor[rollers] = 127;
-			runIntake = true;
+			runIntake = false;
 		}
 		else if(leftTriggerDown == 1) {
 			motor[rollers] = -127;
-			runIntake = false;
+			runIntake = true;
 		}
 		else {
 			if (runIntake)
-				motor[rollers] = 20;
+				motor[rollers] = -20;
 			else
 				motor[rollers] = 0;
 		}
