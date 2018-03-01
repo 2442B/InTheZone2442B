@@ -1,3 +1,4 @@
+#pragma config(Sensor, in3,    secondBattery,  sensorAnalog)
 #pragma config(Sensor, in4,    gyro,           sensorGyro)
 #pragma config(Sensor, in7,    topLiftPoten,   sensorPotentiometer)
 #pragma config(Sensor, in8,    baseLiftPoten,  sensorPotentiometer)
@@ -89,13 +90,15 @@ void pre_auton()
 		if(showBattery)
 		{
 			sprintf(mainBattery, "Main: %f", nImmediateBatteryLevel/1000.0);
-			sprintf(powerExpander, "2nd Battery:");
+			sprintf(powerExpander, "2nd Battery: %f", SensorValue[secondBattery]/155.0);
 			displayLCDCenteredString(0,mainBattery);
 			displayLCDCenteredString(1,powerExpander);
+			//writeDebugStreamLine("powerExpander: %f", powerExpander);
 		}
 		else
 		{
 			displayLCDCenteredString(0,selection[count]);
+			clearLCDLine(1);
 			aMinorSide = selectionSide[count];
 			aZone = selectionZone[count];
 			waitForRelease();
@@ -263,6 +266,7 @@ task runEndAuton()
 
 void runProgSkills()
 {
+	clearTimer(T1);
 	//run auton to score in 20Z
 	string blank = "";
 	clearTimer(T1);
@@ -271,7 +275,8 @@ void runProgSkills()
 	//Go to mobile goal â Drop mobile base lift, lift cone, and drive straight
 	setBaseLiftPos(550, 10, -15);
 	setForkliftPower(-60);
-	driveStraight(1450,127); //drive to mobile goal
+	basicSlewControlDrive(127);
+	driveStraight(1450,127,true); //drive to mobile goal
 	setForkliftPower(0);
 
 	//pick up goal
@@ -279,31 +284,84 @@ void runProgSkills()
 	setForkliftPos(FORKLIFT_UP);
 	wait1Msec(750);
 	setBaseLiftPos(800, 10);
-	turnToPos(70, true, 500);
-	driveStraight(70,127);
+	turnToPos(-100, true, 2000);
+	wait1Msec(200);
 	setForkliftPower(0);
 
-	driveStraight(-1800, 127); //Back up
-	turnToPos(1350, true, 2500);
+	basicSlewControlDrive(-127);
+	driveStraight(-1900, 127); //Back up
+	turnToPos(-1350, true, 2500);
+	if(SensorValue[gyro]>-1350)
+	{
+		setLeftMotors(30);
+		setRightMotors(-30);
+		while(SensorValue[gyro]>-1340){wait1Msec(20);}
+		setAllDriveMotors(0);
+	}
 
 	setClawPower(127); //Drop cone
 	wait1Msec(500);
-	setBaseLiftPos(500, 10); //Raise baseLift
+	//setBaseLiftPos(500, 10); //Raise baseLift
 	setClawPower(0);
 
-	driveStraight(200,127); //Into 10
+	driveStraight(300,127); //Into 10
 	setForkliftPos(FORKLIFT_DOWN); //Forklift down
-	driveStraight(200,127); //Drop off
-	setForkliftPower(0);
+	driveStraight(350,127); //Drop off
 
+	//back out
 	setBaseLiftPos(750, 10);
-	driveStraight(-400, 127);
+	driveStraight(-500, 127);
+	setForkliftPos(FORKLIFT_UP);
 
-	turnToPos(-450, false, 2500); //Around along white line
-	driveStraight(-300, 127); //Back up
-	turnToPos(450, false, 2500); //Turn perpendicular to bar
+	//reset against bar
+	wait1Msec(500);
+	turnToPos(425,false,2500);
+	basicSlewControlDrive(-127);
+	driveStraight(-10000,127,1,1500,true);//distance is arbitrarily large so that time is a limiting factor
+	wait1Msec(500);
 
-	driveStraight(-200, 63);
+	SensorValue[gyro] = 0;
+	basicSlewControlDrive(90);
+	setAllDriveMotors(-50);
+	wait1Msec(20);
+	setAllDriveMotors(0);
+	turnToPos(-800);
+	setLeftMotors(25);
+	while(SensorValue[gyro] > -890){wait1Msec(40);}
+	setLeftMotors(0);
+	wait1Msec(500);
+	basicSlewControlDrive(-127);
+	driveStraight(-10000,127,1,3500);
+
+	//move to second mogo
+	setForkliftPos(FORKLIFT_DOWN);
+	basicSlewControlDrive(127);
+	driveStraight(300,127,true);
+	turnToPos(0);
+	if(SensorValue[gyro]>15)
+	{
+		setLeftMotors(30);
+		setRightMotors(-30);
+		while(SensorValue[gyro]>5){wait1Msec(20);}
+	}
+	else if(SensorValue[gyro]<-15)
+	{
+		setLeftMotors(-30);
+		setRightMotors(30);
+		while(SensorValue[gyro]<-5){wait1Msec(20);}
+	}
+	setAllDriveMotors(0);
+	setForkliftPos(-60);
+	basicSlewControlDrive(127);
+	driveStraight(500,127);
+	setForkliftPos(FORKLIFT_UP);
+
+	writeDebugStreamLine("PROG SKILLS TIME: %f", time1(T1));
+
+//	turnToPos(-425, false, 2500); //Around along white line
+//	driveStraight(-10000, 127,1,1000); //Back up
+//	SensorValue[gyro] = 0;
+	//turnToPos(900, false, 2500); //Turn perpendicular to bar
 
 	//CALIBRATE GYRO
 
@@ -351,7 +409,10 @@ task autonomous()
 	//while(time1(T3)<12500){wait1Msec(20);}
 	//stopTask(runBasicCompAuton);
 	//startTask(runEndAuton);
+
 	runProgSkills();
+	//basicSlewControlDrive(127);
+	//driveStraight(1000,127);
 }
 
 task usercontrol()

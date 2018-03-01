@@ -1,3 +1,4 @@
+#pragma config(Sensor, in3,    secondBattery,  sensorAnalog)
 #pragma config(Sensor, in4,    gyro,           sensorGyro)
 #pragma config(Sensor, in7,    topLiftPoten,   sensorPotentiometer)
 #pragma config(Sensor, in8,    baseLiftPoten,  sensorPotentiometer)
@@ -8,7 +9,7 @@
 #pragma config(Sensor, dgtl8,  minorZoneToggle, sensorDigitalIn)
 #pragma config(Sensor, dgtl9,  majorZoneToggle, sensorDigitalIn)
 #pragma config(Sensor, dgtl11, leftQuad,       sensorQuadEncoder)
-#pragma config(Motor,  port2,           rollers,       tmotorVex393_HBridge, openLoop)
+#pragma config(Motor,  port2,           rollers,       tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port3,           driveLeftFront, tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port4,           driveLeftBack, tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port5,           driveRightBack, tmotorVex393_MC29, openLoop)
@@ -29,7 +30,7 @@ enum ForkliftPos {FORKLIFT_UP=1,FORKLIFT_DOWN=-1};
 enum PotenValuesTop {BACK_TOP = 1200, UPRIGHT_TOP = 2008, MATCHLOAD_TOP = 580, SCORE_TOP = 3750, FLAT_TOP=1900};
 enum PotenValuesClaw {BACK_CLAW = 3700, MATCHLOAD_CLAW = 750};
 enum PotenValuesBase {BACK_BASE = 1080, MATCHLOAD_BASE = 700, HIGHEST_BASE =  0}; //values increase as lift moves down
-int basicTopPositions[3] = {1230, 1900, 3700};
+int basicTopPositions[3] = {1270, 1900, 3700};
 int basicTopKp[3] = {0.3,0.3,0.3};
 int topLiftPositions[12] = {3700,2600,2775,2600,2600,2600,2600,2600,2600,2600,2600,2600};
 int baseLiftPositions[12] = {3600,3550,3400,3300,3100,3000,2900,3400,3300,3250,2695,2525};
@@ -126,6 +127,18 @@ void setClawPower(int power)
 
 }
 
+void basicSlewControlDrive(int power)
+{
+	int currentPower = 0;
+	while(currentPower<power)
+	{
+		currentPower += 20;
+		if(currentPower > power){currentPower = power;}
+		setAllDriveMotors(currentPower);
+		wait1Msec(40);
+	}
+}
+
 /////////TASKS/////////
 task correctStraight()
 {
@@ -141,10 +154,21 @@ task correctStraight()
 	{
 		err = theta - SensorValue[gyro];
 		deriv = (err-oldErr); //if error is increasing, apply more power (compensate for less momentum). else, apply less power
-		integral = totalErr * 0.07;
-		power = err*1.5 + deriv*1.0 + integral;
-		rightPowerAdjustment = power;
-		leftPowerAdjustment = -power;
+		if(fabs(err)<10)
+			integral = 0
+		else
+			integral = totalErr * 0.04;
+		power = err*1.8 + deriv*1.0 + integral;
+		if(power>0)
+		{
+			rightPowerAdjustment = 0;
+			leftPowerAdjustment = -power;
+		}
+		else
+		{
+			rightPowerAdjustment = power;
+			leftPowerAdjustment = 0;
+		}
 		oldErr = err;
 		totalErr += err;
 		writeDebugStreamLine("Drive, Err: %d, Deriv: %d, TotalErr: %d, Integral: %d, Power: %d", err,deriv,totalErr,integral,power);
@@ -155,24 +179,24 @@ task correctStraight()
 /*
 task setTopLiftPosTask() //reachedMobileGoal is only used in auton to stop and hold lift in place if robot reaches goal unexpectedly early
 {
-	bool ignore = false;
-	if((desiredTop == BACK_TOP && SensorValue[topLiftPoten]<BACK_TOP) || reachedMobileGoal)
-		ignore = true;
-	int err = desiredTop - SensorValue[topLiftPoten];
-	int power = 127;
+bool ignore = false;
+if((desiredTop == BACK_TOP && SensorValue[topLiftPoten]<BACK_TOP) || reachedMobileGoal)
+ignore = true;
+int err = desiredTop - SensorValue[topLiftPoten];
+int power = 127;
 
-	while(abs(err)>25 &&  !ignore) //adjust power of motors while error is outide of certain range, then set power to 0
-	{
-		err = desiredTop - SensorValue[topLiftPoten];
-		power = (int) (err*127/4095*kpTop); //HAD MINUS SIGN
-		setTopLiftPower(power);
-		//writeDebugStreamLine("Desired: %d, Poten: %d, Power: %d, Error: %d", desiredTop, SensorValue[topLiftPoten], power,err);
-		wait1Msec(50);
-	}
-	//writeDebugStreamLine("Moving to powAfter");
-	setTopLiftPower(powAfterTop);
-	if(reachedMobileGoal)
-		setTopLiftPower(0);
+while(abs(err)>25 &&  !ignore) //adjust power of motors while error is outide of certain range, then set power to 0
+{
+err = desiredTop - SensorValue[topLiftPoten];
+power = (int) (err*127/4095*kpTop); //HAD MINUS SIGN
+setTopLiftPower(power);
+//writeDebugStreamLine("Desired: %d, Poten: %d, Power: %d, Error: %d", desiredTop, SensorValue[topLiftPoten], power,err);
+wait1Msec(50);
+}
+//writeDebugStreamLine("Moving to powAfter");
+setTopLiftPower(powAfterTop);
+if(reachedMobileGoal)
+setTopLiftPower(0);
 }
 */
 
@@ -187,28 +211,24 @@ task holdTopLiftPosTask()
 
 	while(1) //adjust power of motors while error is outide of certain range, then set power to 0
 	{
-			err = desiredTop - SensorValue[topLiftPoten];
-			holdTopDeriv = err - holdTopPrevious;
-			//writeDebugStreamLine("4bar kp: %f",kpTop);
-			power = (int) (err*0.3 + holdTopDeriv*0.1 + holdTopTotal*0); //USING KP INSTEAD OF MANUAL 0.3 DOES NOT WORK - NEED TO DEBUG
-			//writeDebugStreamLine("Desired: %d, Poten: %d, Power: %d, Error: %d", desiredTop, SensorValue[topLiftPoten], power,err);
-			datalogDataGroupStart();
-			datalogAddValue(0,err);
-			datalogAddValue(1,power);
-			datalogDataGroupEnd();
+		err = desiredTop - SensorValue[topLiftPoten];
+		holdTopDeriv = err - holdTopPrevious;
+		//writeDebugStreamLine("4bar kp: %f",kpTop);
+		power = (int) (err*0.3 + holdTopDeriv*0.1 + holdTopTotal*0); //USING KP INSTEAD OF MANUAL 0.3 DOES NOT WORK - NEED TO DEBUG
+		writeDebugStreamLine("Desired: %d, Poten: %d, Power: %d, Error: %d", desiredTop, SensorValue[topLiftPoten], power,err);
 
-			holdTopPrevious = err;
-			holdTopTotal += err;
-			wait1Msec(50);
+		holdTopPrevious = err;
+		holdTopTotal += err;
+		wait1Msec(50);
 
-		if((fabs(err)>50) || (desiredTop == basicTopPositions[1]))
+		if((fabs(err)>50) || (desiredTop == basicTopPositions[1]) || !(desiredTop==basicTopPositions[0] && sensorValue[topLiftPoten]<basicTopPositions[0]))
 		{
 			setTopLiftPower(power);
 		}
 		else
 		{
 			setTopLiftPower(0);
-			}
+		}
 	}
 }
 
@@ -231,44 +251,44 @@ task setBaseLiftPosTask()
 
 task holdBaseLiftPosTask()
 {
-    userControlBase = false;
-    int power;
+	userControlBase = false;
+	int power;
 
-    //proportional
-    int errBase = desiredBase - SensorValue[baseLiftPoten];
+	//proportional
+	int errBase = desiredBase - SensorValue[baseLiftPoten];
 
-    //deriv
-    int derivBase = 0;
-    int previousErrBase = 0;
-    int previousDerivBase = 0;
+	//deriv
+	int derivBase = 0;
+	int previousErrBase = 0;
+	int previousDerivBase = 0;
 
-    //integeral
-    int totalErrBase = 0;
+	//integeral
+	int totalErrBase = 0;
 
-    clearTimer(T3);
+	clearTimer(T3);
 
-    while(time1[T3] < topLiftTimeLimit) //adjust power of motors while error is outide of certain range, then set power to 0
-    {
-        errBase = desiredBase - SensorValue[baseLiftPoten];
-        derivBase = errBase - previousErrBase;
+	while(time1[T3] < topLiftTimeLimit) //adjust power of motors while error is outide of certain range, then set power to 0
+	{
+		errBase = desiredBase - SensorValue[baseLiftPoten];
+		derivBase = errBase - previousErrBase;
 
-        //if(sgn(derivBase)!=sgn(previousDerivBase))
-        //{
-        //    writeDebugStreamLine("Switch at err: %d, t: %f", errBase, time1(T3));
-        //    clearTimer(T3);
-        //}
-       datalogDataGroupStart();
-			datalogAddValue(0,errBase);
-			datalogDataGroupEnd();
+		//if(sgn(derivBase)!=sgn(previousDerivBase))
+		//{
+		//    writeDebugStreamLine("Switch at err: %d, t: %f", errBase, time1(T3));
+		//    clearTimer(T3);
+		//}
+		datalogDataGroupStart();
+		datalogAddValue(0,errBase);
+		datalogDataGroupEnd();
 
-        power = (int) (errBase*0.18 + derivBase*0.3 +totalErrBase*0)
-        setBaseLiftPower(power);
+		power = (int) (errBase*0.18 + derivBase*0.3 +totalErrBase*0)
+		setBaseLiftPower(power);
 
-        previousErrBase = errBase;
-        totalErrBase += errBase;
+		previousErrBase = errBase;
+		totalErrBase += errBase;
 
-        wait1Msec(50);
-    }
+		wait1Msec(50);
+	}
 }
 
 task setClawUntilPosTask()
@@ -297,18 +317,25 @@ void setForkliftPos(int aForkPos, int aForkliftTime = 1800)
 	forkliftTime = aForkliftTime;
 	startTask(setForkliftPosTask);
 }
-void driveStraight(int dest, int basePower = 127, float leftMultiplier = 0.5) //uses correctStraight task (with gyro) to dive straight
+void driveStraight(int dest, int basePower = 127, float leftMultiplier = 1, int timeLimitingInstead = 0, bool hold=false) //uses correctStraight task (with gyro) to dive straight
 {
+	if(timeLimitingInstead != 0)
+	{
+		clearTimer(T2);
+	}
 	theta = SensorValue[gyro];
-	SensorValue[leftQuad] = 0;
-	SensorValue[rightQuad] = 0;
+	if(!hold)
+	{
+		SensorValue[leftQuad] = 0;
+		SensorValue[rightQuad] = 0;
+	}
 	int err = dest;
 	int power = 127;
 	rightPowerAdjustment = 0;
 	leftPowerAdjustment = 0;
 	startTask(correctStraight);
 	//writeDebugStreamLine("err: %d, power: %d sdfdgdsgfgfsggffs",err,power);
-	while(fabs(err)>20 && fabs(dest - (SensorValue[leftQuad]))>20)
+	while(fabs(err)>20 && fabs(dest - (SensorValue[leftQuad]))>20 && !(timeLimitingInstead !=0 && time1(T2)>timeLimitingInstead))
 	{
 		err = dest - SensorValue[leftQuad];
 		power = basePower*sgn(err);
@@ -317,7 +344,7 @@ void driveStraight(int dest, int basePower = 127, float leftMultiplier = 0.5) //
 		//writeDebugStreamLine("motors set");
 		wait1Msec(50);
 		//writeDebugStreamLine("RightAdjustment: %d, LeftAdjustment: %d", rightPowerAdjustment, leftPowerAdjustment);
-		//writeDebugStreamLine("err: %d, power: %d, rpower: %d",err,power,(int)(power*rightMultiplier + rightPowerAdjustment));
+		//writeDebugStreamLine("Drive! err: %d, power: %d, rpower: %d",err,power,(int)(power + rightPowerAdjustment));
 	}
 	stopTask(correctStraight);
 	setAllDriveMotors(0);
@@ -367,11 +394,11 @@ void turnToPos(int pos,bool withMobileGoal=true,int timeLimit = 2500)
 /*
 void setTopLiftPos(int aDesired, float aKp, int aPowAfter = 0)
 {
-	reachedMobileGoal = false;
-	desiredTop = aDesired;
-	kpTop = aKp;
-	powAfterTop = aPowAfter;
-	startTask(setTopLiftPosTask);
+reachedMobileGoal = false;
+desiredTop = aDesired;
+kpTop = aKp;
+powAfterTop = aPowAfter;
+startTask(setTopLiftPosTask);
 }*/
 
 void holdTopLiftPos(int aDesired, float aKp, int aPowAfter = 0)
@@ -405,9 +432,9 @@ void setBaseLiftPos(int aDesired, float aKp, int aPowAfter = 0)
 
 void holdBaseLiftPos(int aDesired)
 {
-    reachedMobileGoal = false;
-    desiredBase = aDesired;
-    startTask(holdBaseLiftPosTask);
+	reachedMobileGoal = false;
+	desiredBase = aDesired;
+	startTask(holdBaseLiftPosTask);
 }
 
 void setClawUntilPos(int aDesiredClaw, int aClawPower)
