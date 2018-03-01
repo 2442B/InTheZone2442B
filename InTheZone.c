@@ -321,8 +321,8 @@ void runProgSkills()
 
 	SensorValue[gyro] = 0;
 	basicSlewControlDrive(90);
-	setAllDriveMotors(-50);
-	wait1Msec(20);
+	//setAllDriveMotors(-50);
+	//wait1Msec(150);
 	setAllDriveMotors(0);
 	turnToPos(-800);
 	setLeftMotors(25);
@@ -362,8 +362,8 @@ void runProgSkills()
 	basicSlewControlDrive(-127);
 	driveStraight(-350, 127);
 	turnToPos(-1625, true);
-	setAllDriveMotors(63);
-	wait1Msec(1000);
+	setAllDriveMotors(42);
+	wait1Msec(1300);
 	setForkliftPos(FORKLIFT_DOWN);
 
 	wait1Msec(1250);
