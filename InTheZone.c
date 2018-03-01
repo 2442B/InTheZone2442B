@@ -319,11 +319,14 @@ void runProgSkills()
 	driveStraight(-10000,90,1,1250,true);//distance is arbitrarily large so that time is a limiting factor
 	wait1Msec(500);
 
+	//reset along wall
 	SensorValue[gyro] = 0;
 	basicSlewControlDrive(90);
 	//setAllDriveMotors(-50);
 	//wait1Msec(150);
+	driveStraight(75,127,true);
 	setAllDriveMotors(0);
+	wait1Msec(200);
 	turnToPos(-800);
 	setLeftMotors(25);
 	while(SensorValue[gyro] > -890){wait1Msec(40);}
@@ -360,15 +363,57 @@ void runProgSkills()
 
 	//Holding second mobile base
 	basicSlewControlDrive(-127);
-	driveStraight(-350, 127);
-	turnToPos(-1625, true);
-	setAllDriveMotors(42);
-	wait1Msec(1300);
+	//turn and score
+	basicSlewControlDrive(-127);
+	driveStraight(-350, 127,true);
+	turnToPos(-1675, true);
+	basicSlewControlDrive(127);
+	driveStraight(330,127,true);
+	setLeftMotors(30);
+	while(SensorValue[gyro]>-1750);
+	setAllDriveMotors(0);
+	wait1Msec(500);
 	setForkliftPos(FORKLIFT_DOWN);
 
-	wait1Msec(1250);
+	wait1Msec(1100);
+//back out of 2nd mogo
+	basicSlewControlDrive(-80);
+	driveStraight(-200, 80,true);
 
-	driveStraight(-600, 127);
+	//correct against bar
+	setForkliftPos(FORKLIFT_UP);
+	wait1Msec(1800);
+	turnToPos(0);
+	basicSlewControlDrive(-80);
+	driveStraight(-10000,80,1,1000,true);
+
+	//turn and drive to 3rd mogo
+	SensorValue[gyro] = 0;
+	/*
+	if(SensorValue[gyro]<100)
+	{
+		while(SensorValue[gyro]<110)
+		{
+			setLeftMotors(-30);
+			setRightMotors(30);
+		}
+		setAllDriveMotors(0);
+	}
+	else
+	{
+		while(SensorValue[gyro]>90)
+		{
+			setLeftMotors(30);
+			setRightMotors(-30);
+		}
+		setAllDriveMotors(0);
+	}*/
+	wait1Msec(200);
+	basicSlewControlDrive(127);
+	wait1Msec(1000);
+	setForkliftPower(-60);
+	driveStraight(1500,127,true);
+
 
 	writeDebugStreamLine("PROG SKILLS TIME: %f", time1(T1));
 
