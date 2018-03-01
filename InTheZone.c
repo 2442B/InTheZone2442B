@@ -340,7 +340,7 @@ void runProgSkills()
 	//move to second mogo
 	setForkliftPos(FORKLIFT_DOWN);
 	basicSlewControlDrive(127);
-	driveStraight(400,127,true);
+	driveStraight(450,127,true);
 	turnToPos(0);
 	if(SensorValue[gyro]>15)
 	{
@@ -410,10 +410,28 @@ void runProgSkills()
 	}*/
 	wait1Msec(200);
 	basicSlewControlDrive(127);
-	wait1Msec(1000);
+	wait1Msec(250);
 	setForkliftPower(-60);
-	driveStraight(1500,127,true);
+	driveStraight(1850,127,true);
+	setForkliftPos(FORKLIFT_UP);
+	wait1Msec(750);
 
+	//Holding mogo
+	basicSlewControlDrive(127);
+	driveStraight(900, 127, true);
+	turnToPos(150);
+	driveStraight(400, 127,true);
+
+
+	setForkliftPos(FORKLIFT_DOWN);
+	basicSlewControlDrive(-127);
+	driveStraight(-400);
+
+	/*
+	setAllDriveMotors(30);
+	wait1Msec(750);
+
+	*/
 
 	writeDebugStreamLine("PROG SKILLS TIME: %f", time1(T1));
 
