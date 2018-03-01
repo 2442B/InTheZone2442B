@@ -269,7 +269,6 @@ void runProgSkills()
 	clearTimer(T1);
 	//run auton to score in 20Z
 	string blank = "";
-	clearTimer(T1);
 	reachedMobileGoal = false; //will act as hard stop for lifting cone â?? when reachedMobileGoal is true, the lift will immediately drop
 
 	//Go to mobile goal â Drop mobile base lift, lift cone, and drive straight
@@ -289,7 +288,7 @@ void runProgSkills()
 	setForkliftPower(0);
 
 	basicSlewControlDrive(-127);
-	driveStraight(-1900, 127); //Back up
+	driveStraight(-1975, 127); //Back up
 	turnToPos(-1350, true, 2500);
 	if(SensorValue[gyro]>-1350)
 	{
@@ -317,7 +316,7 @@ void runProgSkills()
 	wait1Msec(500);
 	turnToPos(425,false,2500);
 	basicSlewControlDrive(-127);
-	driveStraight(-10000,127,1,1500,true);//distance is arbitrarily large so that time is a limiting factor
+	driveStraight(-10000,90,1,1250,true);//distance is arbitrarily large so that time is a limiting factor
 	wait1Msec(500);
 
 	SensorValue[gyro] = 0;
@@ -330,13 +329,15 @@ void runProgSkills()
 	while(SensorValue[gyro] > -890){wait1Msec(40);}
 	setLeftMotors(0);
 	wait1Msec(500);
-	basicSlewControlDrive(-127);
-	driveStraight(-10000,127,1,3500);
+	//basicSlewControlDrive(-127);
+	//driveStraight(-10000,127,1,2500);
+	setAllDriveMotors(-127);
+	wait1Msec(3000); //Back into wall
 
 	//move to second mogo
 	setForkliftPos(FORKLIFT_DOWN);
 	basicSlewControlDrive(127);
-	driveStraight(300,127,true);
+	driveStraight(400,127,true);
 	turnToPos(0);
 	if(SensorValue[gyro]>15)
 	{
@@ -355,6 +356,19 @@ void runProgSkills()
 	basicSlewControlDrive(127);
 	driveStraight(500,127);
 	setForkliftPos(FORKLIFT_UP);
+	wait1Msec(750);
+
+	//Holding second mobile base
+	basicSlewControlDrive(-127);
+	driveStraight(-350, 127);
+	turnToPos(-1625, true);
+	setAllDriveMotors(63);
+	wait1Msec(1000);
+	setForkliftPos(FORKLIFT_DOWN);
+
+	wait1Msec(1250);
+
+	driveStraight(-600, 127);
 
 	writeDebugStreamLine("PROG SKILLS TIME: %f", time1(T1));
 
