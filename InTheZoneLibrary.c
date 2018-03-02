@@ -30,7 +30,7 @@ enum ForkliftPos {FORKLIFT_UP=1,FORKLIFT_DOWN=-1};
 enum PotenValuesTop {BACK_TOP = 1200, UPRIGHT_TOP = 2008, MATCHLOAD_TOP = 580, SCORE_TOP = 3750, FLAT_TOP=1900};
 enum PotenValuesClaw {BACK_CLAW = 3700, MATCHLOAD_CLAW = 750};
 enum PotenValuesBase {BACK_BASE = 1080, MATCHLOAD_BASE = 700, HIGHEST_BASE =  0}; //values increase as lift moves down
-int basicTopPositions[3] = {1270, 1900, 3700};
+int basicTopPositions[3] = {1270, 2000, 3810};
 int basicTopKp[3] = {0.3,0.3,0.3};
 int topLiftPositions[12] = {3700,2600,2775,2600,2600,2600,2600,2600,2600,2600,2600,2600};
 int baseLiftPositions[12] = {3600,3550,3400,3300,3100,3000,2900,3400,3300,3250,2695,2525};
@@ -132,7 +132,7 @@ void basicSlewControlDrive(int power)
 	int currentPower = 0;
 	while(currentPower<power)
 	{
-		currentPower += 20;
+		currentPower += 30;
 		if(currentPower > power){currentPower = power;}
 		setAllDriveMotors(currentPower);
 		wait1Msec(40);
@@ -158,7 +158,7 @@ task correctStraight()
 			integral = 0
 		else
 			integral = totalErr * 0.04;
-		power = err*1.8 + deriv*1.0 + integral;
+		power = err*2 + deriv*1.0 + integral;
 		if(power>0)
 		{
 			rightPowerAdjustment = 0;
@@ -213,15 +213,21 @@ task holdTopLiftPosTask()
 	{
 		err = desiredTop - SensorValue[topLiftPoten];
 		holdTopDeriv = err - holdTopPrevious;
-		//writeDebugStreamLine("4bar kp: %f",kpTop);
+		//writeDebugStreamLine("4bar kp: %f"
+		if(desiredTop == basicTopPositions[1])
+		{
+			power = (int) (err*0.2 + holdTopDeriv*0.1 + holdTopTotal*0);
+		}
+		else{
 		power = (int) (err*0.3 + holdTopDeriv*0.1 + holdTopTotal*0); //USING KP INSTEAD OF MANUAL 0.3 DOES NOT WORK - NEED TO DEBUG
-		writeDebugStreamLine("Desired: %d, Poten: %d, Power: %d, Error: %d", desiredTop, SensorValue[topLiftPoten], power,err);
+	}
+		//writeDebugStreamLine("Desired: %d, Poten: %d, Power: %d, Error: %d", desiredTop, SensorValue[topLiftPoten], power,err);
 
 		holdTopPrevious = err;
 		holdTopTotal += err;
 		wait1Msec(50);
 
-		if((fabs(err)>50) || (desiredTop == basicTopPositions[1]) || !(desiredTop==basicTopPositions[0] && sensorValue[topLiftPoten]<basicTopPositions[0]))
+		if(fabs(power)>40 && ((fabs(err)>50) || (desiredTop == basicTopPositions[1]) || !(desiredTop==basicTopPositions[0] && sensorValue[topLiftPoten]<basicTopPositions[0])))
 		{
 			setTopLiftPower(power);
 		}
@@ -324,11 +330,11 @@ void driveStraight(int dest, int basePower = 127, float leftMultiplier = 1, int 
 		clearTimer(T2);
 	}
 	theta = SensorValue[gyro];
-	if(!hold)
-	{
-		SensorValue[leftQuad] = 0;
-		SensorValue[rightQuad] = 0;
-	}
+	//reset encoders
+	SensorValue[leftQuad] = 0;
+	SensorValue[rightQuad] = 0;
+	basicSlewControlDrive(basePower*sgn(dest));
+
 	int err = dest;
 	int power = 127;
 	rightPowerAdjustment = 0;
@@ -341,6 +347,7 @@ void driveStraight(int dest, int basePower = 127, float leftMultiplier = 1, int 
 		power = basePower*sgn(err);
 		setRightMotors((int)(power + rightPowerAdjustment));
 		setLeftMotors((int) ((power + leftPowerAdjustment)*leftMultiplier));
+		//writeDebugStreamLine("RightMotor: %d, LeftMotors: %d", (int)(power + rightPowerAdjustment), (int) ((power + leftPowerAdjustment)*leftMultiplier));
 		//writeDebugStreamLine("motors set");
 		wait1Msec(50);
 		//writeDebugStreamLine("RightAdjustment: %d, LeftAdjustment: %d", rightPowerAdjustment, leftPowerAdjustment);
