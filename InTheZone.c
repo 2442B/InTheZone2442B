@@ -31,8 +31,8 @@
 
 //for auton task
 string aMajorSide;
-int aMinorSide;
-int aZone;
+int aMinorSide = 1;
+int aZone = 10;
 
 void waitForRelease()
 {
@@ -153,8 +153,11 @@ void runBasicCompAuton(int minorSide, int zone)
 	wait1Msec(1200);
 	setBaseLiftPos(800, 10);
 	turnToPos(70, true, 500);
+	setClawPower(127);
 	//driveStraight(70,127); //for second
+	wait1Msec(500);
 	setForkliftPower(0);
+	setClawPower(0);
 
 	//pick up second cone
 	/*
@@ -172,9 +175,21 @@ void runBasicCompAuton(int minorSide, int zone)
 	*/
 	if(zone==20)
 	{
-		turnToPos(130*minorSide, true, 700);
-		setBaseLiftPos(950, 10);
-		driveStraight(-1800,127);
+		turnToPos(110*minorSide, true, 700);
+		if(SensorValue[gyro]>110)
+		{
+			setLeftMotors(30);
+			setRightMotors(-30);
+			while(SensorValue[gyro]>110){wait1Msec(20);}
+		}
+		else if(SensorValue[gyro]<-110)
+		{
+			setLeftMotors(-30);
+			setRightMotors(30);
+			while(SensorValue[gyro]<-110){wait1Msec(20);}
+		}
+			setBaseLiftPos(950, 10);
+			driveStraight(-1800,127);
 	}
 	else if(zone == 10)
 	{
@@ -198,9 +213,10 @@ void runBasicCompAuton(int minorSide, int zone)
 	{
 		turnToPos(1337*minorSide);
 		basicSlewControlDrive(127)
-		wait1Msec(1000);
+		wait1Msec(750);
 		setForkliftPos(FORKLIFT_DOWN);
-		driveStraight(270,127);
+		wait1Msec(500);
+		//driveStraight(220,127);
 	}
 	else if(zone == 10)
 	{
@@ -470,12 +486,12 @@ task autonomous()
 	//clearTimer(T3);
 	writeDebugStreamLine("the zone %d",aZone);
 	writeDebugStreamLine("the side %d",aMinorSide);
-	//runBasicCompAuton(aMinorSide,aZone);
+	runBasicCompAuton(aMinorSide,aZone);
 	//while(time1(T3)<12500){wait1Msec(20);}
 	//stopTask(runBasicCompAuton);
 	//startTask(runEndAuton);
 
-	runProgSkills();
+	//runProgSkills();
 	//basicSlewControlDrive(127);
 	//driveStraight(1000,90);
 }
