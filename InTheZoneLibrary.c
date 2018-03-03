@@ -132,11 +132,12 @@ void basicSlewControlDrive(int power)
 	int currentPower = 0;
 	while(currentPower<power)
 	{
-		currentPower += 30;
+		currentPower += 15;
 		if(currentPower > power){currentPower = power;}
 		setAllDriveMotors(currentPower);
 		wait1Msec(40);
 	}
+	writeDebugStreamLine("slew finished");
 }
 
 /////////TASKS/////////
@@ -154,11 +155,11 @@ task correctStraight()
 	{
 		err = theta - SensorValue[gyro];
 		deriv = (err-oldErr); //if error is increasing, apply more power (compensate for less momentum). else, apply less power
-		if(fabs(err)<10)
-			integral = 0
-		else
-			integral = totalErr * 0.04;
-		power = err*2 + deriv*1.0 + integral;
+		//if(fabs(err)<10)
+			//integral = 0
+		//else
+			integral = totalErr * 0.1;
+		power = err*1.8 + deriv*1.0 + integral;
 		if(power>0)
 		{
 			rightPowerAdjustment = 0;
@@ -219,7 +220,7 @@ task holdTopLiftPosTask()
 			power = (int) (err*0.2 + holdTopDeriv*0.1 + holdTopTotal*0);
 		}
 		else{
-		power = (int) (err*0.3 + holdTopDeriv*0.1 + holdTopTotal*0); //USING KP INSTEAD OF MANUAL 0.3 DOES NOT WORK - NEED TO DEBUG
+		power = (int) (err*0.4 + holdTopDeriv*0.1 + holdTopTotal*0); //USING KP INSTEAD OF MANUAL 0.3 DOES NOT WORK - NEED TO DEBUG
 	}
 		//writeDebugStreamLine("Desired: %d, Poten: %d, Power: %d, Error: %d", desiredTop, SensorValue[topLiftPoten], power,err);
 
@@ -227,7 +228,7 @@ task holdTopLiftPosTask()
 		holdTopTotal += err;
 		wait1Msec(50);
 
-		if(fabs(power)>40 && ((fabs(err)>50) || (desiredTop == basicTopPositions[1]) || !(desiredTop==basicTopPositions[0] && sensorValue[topLiftPoten]<basicTopPositions[0])))
+		if(fabs(power)>30 && ((fabs(err)>20) || (desiredTop == basicTopPositions[1]) || !(desiredTop==basicTopPositions[0] && sensorValue[topLiftPoten]<basicTopPositions[0])))
 		{
 			setTopLiftPower(power);
 		}
@@ -323,7 +324,7 @@ void setForkliftPos(int aForkPos, int aForkliftTime = 1800)
 	forkliftTime = aForkliftTime;
 	startTask(setForkliftPosTask);
 }
-void driveStraight(int dest, int basePower = 127, float leftMultiplier = 1, int timeLimitingInstead = 0, bool hold=false) //uses correctStraight task (with gyro) to dive straight
+void driveStraight(int dest, int basePower = 127, float leftMultiplier = 0.9, int timeLimitingInstead = 0, bool hold=false) //uses correctStraight task (with gyro) to dive straight
 {
 	if(timeLimitingInstead != 0)
 	{
