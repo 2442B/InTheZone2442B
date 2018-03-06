@@ -628,25 +628,25 @@ task usercontrol()
 		}
 
 		//Mobile Goal Base Lifters
-		if(btnSevenUp == 1)
+		if(leftTriggerUp == 1)
 		{
 			if(SensorValue(forkliftButton) == 1)
 				setForkliftPower(127);
 			else
 				setForkliftPower(0);
 		}
-		else if(btnSevenDown == 1)
+		else if(leftTriggerDown == 1)
 			setForkliftPower(-127);
 		else
 			setForkliftPower(0);
 
 
 		//roller
-		if(leftTriggerUp == 1) {
+		if(btnSevenUp == 1) {
 			motor[rollers] = 127;
 			runIntake = false;
 		}
-		else if(leftTriggerDown == 1) {
+		else if(btnSevenDown == 1) {
 			motor[rollers] = -127;
 			runIntake = true;
 		}
