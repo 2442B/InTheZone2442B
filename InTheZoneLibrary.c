@@ -283,7 +283,7 @@ task holdBaseLiftPosTask()
 		datalogAddValue(0,errBase);
 		datalogDataGroupEnd();
 
-		power = (int) (errBase*0.18 + derivBase*0.3 +totalErrBase*0)
+		power = (int) (errBase*0.18 + derivBase*0.3 +totalErrBase*0);
 		setBaseLiftPower(power);
 
 		previousErrBase = errBase;
@@ -319,6 +319,7 @@ void setForkliftPos(int aForkPos, int aForkliftTime = 1800)
 	forkliftTime = aForkliftTime;
 	startTask(setForkliftPosTask);
 }
+
 void driveStraight(int dest, int basePower = 127, float leftMultiplier = 0.9, int timeLimitingInstead = 0, bool hold=false) //uses correctStraight task (with gyro) to dive straight
 {
 	if(timeLimitingInstead != 0)
