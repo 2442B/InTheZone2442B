@@ -570,7 +570,7 @@ task usercontrol()
 				//increase target by 1 up to max position
 				topLiftTargetLoc++;
 				writeDebugStreamLine("unfiltered topLiftTargetLoc: %f", topLiftTargetLoc);
-				if(topLiftTargetLoc > 2){topLiftTargetLoc = 2;}
+				if(topLiftTargetLoc > 1){topLiftTargetLoc = 1;}
 				writeDebugStreamLine("only one topLiftTargetLoc: %f", topLiftTargetLoc);
 				//bring to target pos
 				holdTopLiftPos(basicTopPositions[topLiftTargetLoc],basicTopKp[topLiftTargetLoc]);

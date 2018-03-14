@@ -30,8 +30,8 @@ enum ForkliftPos {FORKLIFT_UP=1,FORKLIFT_DOWN=-1};
 enum PotenValuesTop {BACK_TOP = 1200, UPRIGHT_TOP = 2008, MATCHLOAD_TOP = 580, SCORE_TOP = 3750, FLAT_TOP=1900};
 enum PotenValuesClaw {BACK_CLAW = 3700, MATCHLOAD_CLAW = 750};
 enum PotenValuesBase {BACK_BASE = 1080, MATCHLOAD_BASE = 700, HIGHEST_BASE =  0}; //values increase as lift moves down
-int basicTopPositions[3] = {1270, 2000, 3810};
-int basicTopKp[3] = {0.3,0.3,0.3};
+int basicTopPositions[2] = {1575, 3550};
+int basicTopKp[2] = {0.3,0.3};
 int topLiftPositions[12] = {3700,2600,2775,2600,2600,2600,2600,2600,2600,2600,2600,2600};
 int baseLiftPositions[12] = {3600,3550,3400,3300,3100,3000,2900,3400,3300,3250,2695,2525};
 int secondBaseLiftPositions[12] = {0,3450,3400,3300,3100,3000,2900,3400,3300,3250,2695,2525};
@@ -156,9 +156,9 @@ task correctStraight()
 		err = theta - SensorValue[gyro];
 		deriv = (err-oldErr); //if error is increasing, apply more power (compensate for less momentum). else, apply less power
 		//if(fabs(err)<10)
-			//integral = 0
+		//integral = 0
 		//else
-			integral = totalErr * 0.1;
+		integral = totalErr * 0.1;
 		power = err*1.8 + deriv*1.0 + integral;
 		if(power>0)
 		{
@@ -215,29 +215,24 @@ task holdTopLiftPosTask()
 		err = desiredTop - SensorValue[topLiftPoten];
 		holdTopDeriv = err - holdTopPrevious;
 		//writeDebugStreamLine("4bar kp: %f"
-		if(desiredTop == basicTopPositions[1])
-		{
-			power = (int) (err*0.2 + holdTopDeriv*0.1 + holdTopTotal*0);
-		}
-		else{
 		power = (int) (err*0.4 + holdTopDeriv*0.1 + holdTopTotal*0); //USING KP INSTEAD OF MANUAL 0.3 DOES NOT WORK - NEED TO DEBUG
 	}
-		//writeDebugStreamLine("Desired: %d, Poten: %d, Power: %d, Error: %d", desiredTop, SensorValue[topLiftPoten], power,err);
+	//writeDebugStreamLine("Desired: %d, Poten: %d, Power: %d, Error: %d", desiredTop, SensorValue[topLiftPoten], power,err);
 
-		holdTopPrevious = err;
-		holdTopTotal += err;
-		wait1Msec(50);
+	holdTopPrevious = err;
+	holdTopTotal += err;
+	wait1Msec(50);
 
-		if(fabs(power)>30 && ((fabs(err)>20) || (desiredTop == basicTopPositions[1]) || !(desiredTop==basicTopPositions[0] && sensorValue[topLiftPoten]<basicTopPositions[0])))
-		{
-			setTopLiftPower(power);
-		}
-		else
-		{
-			setTopLiftPower(0);
-		}
+	if(fabs(power)>30 && ((fabs(err)>20) || (desiredTop == basicTopPositions[1]) || !(desiredTop==basicTopPositions[0] && sensorValue[topLiftPoten]<basicTopPositions[0])))
+	{
+		setTopLiftPower(power);
+	}
+	else
+	{
+		setTopLiftPower(0);
 	}
 }
+
 
 task setBaseLiftPosTask()
 {
