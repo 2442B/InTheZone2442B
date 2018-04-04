@@ -27,10 +27,10 @@
 ////GLOBAL VARIABLES////
 //Poten Values For Lift -- Values increase as lift moves backwards
 enum ForkliftPos {FORKLIFT_UP=1,FORKLIFT_DOWN=-1};
-enum PotenValuesTop {BACK_TOP = 1200, UPRIGHT_TOP = 2008, MATCHLOAD_TOP = 580, SCORE_TOP = 3750, FLAT_TOP=1900};
+enum PotenValuesTop {BACK_TOP = 1200, UPRIGHT_TOP = 2008, MATCHLOAD_TOP = 580, SCORE_TOP = 3440, FLAT_TOP=1900};
 enum PotenValuesClaw {BACK_CLAW = 3700, MATCHLOAD_CLAW = 750};
 enum PotenValuesBase {BACK_BASE = 1080, MATCHLOAD_BASE = 700, HIGHEST_BASE =  0}; //values increase as lift moves down
-int basicTopPositions[2] = {1575, 3550};
+int basicTopPositions[2] = {1550, 3440};
 int basicTopKp[2] = {0.3,0.3};
 int topLiftPositions[12] = {3700,2600,2775,2600,2600,2600,2600,2600,2600,2600,2600,2600};
 int baseLiftPositions[12] = {3600,3550,3400,3300,3100,3000,2900,3400,3300,3250,2695,2525};
@@ -214,16 +214,16 @@ task holdTopLiftPosTask()
 	{
 		err = desiredTop - SensorValue[topLiftPoten];
 		holdTopDeriv = err - holdTopPrevious;
-		//writeDebugStreamLine("4bar kp: %f"
 		power = (int) (err*0.4 + holdTopDeriv*0.1 + holdTopTotal*0); //USING KP INSTEAD OF MANUAL 0.3 DOES NOT WORK - NEED TO DEBUG
-	}
+		writeDebugStreamLine("4bar err: %f, power: %f", err, power);
+
 	//writeDebugStreamLine("Desired: %d, Poten: %d, Power: %d, Error: %d", desiredTop, SensorValue[topLiftPoten], power,err);
 
 	holdTopPrevious = err;
 	holdTopTotal += err;
 	wait1Msec(50);
 
-	if(fabs(power)>30 && ((fabs(err)>20) || (desiredTop == basicTopPositions[1]) || !(desiredTop==basicTopPositions[0] && sensorValue[topLiftPoten]<basicTopPositions[0])))
+	if(fabs(power)>30)// && ((fabs(err)>20) || (desiredTop == basicTopPositions[1]) || !(desiredTop==basicTopPositions[0] && sensorValue[topLiftPoten]<basicTopPositions[0])))
 	{
 		setTopLiftPower(power);
 	}
@@ -232,7 +232,7 @@ task holdTopLiftPosTask()
 		setTopLiftPower(0);
 	}
 }
-
+}
 
 task setBaseLiftPosTask()
 {

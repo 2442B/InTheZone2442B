@@ -214,7 +214,7 @@ void runBasicCompAuton(int minorSide, int zone)
 	if(zone == 20)
 	{
 		turnToPos(1337*minorSide);
-		basicSlewControlDrive(127)
+		basicSlewControlDrive(127);
 		wait1Msec(750);
 		setForkliftPos(FORKLIFT_DOWN);
 		wait1Msec(500);
@@ -308,7 +308,7 @@ void runProgSkills()
 	setClawPower(0);
 
 	//score into 20
-	basicSlewControlDrive(127)
+	basicSlewControlDrive(127);
 	wait1Msec(750);
 	setForkliftPos(FORKLIFT_DOWN);
 	wait1Msec(500);
