@@ -1,5 +1,5 @@
-#pragma config(Sensor, in3,    secondBattery,  sensorAnalog)
-#pragma config(Sensor, in4,    gyro,           sensorGyro)
+#pragma config(Sensor, in2,    secondBattery,  sensorAnalog)
+#pragma config(Sensor, in3,    gyro,           sensorGyro)
 #pragma config(Sensor, in7,    topLiftPoten,   sensorPotentiometer)
 #pragma config(Sensor, in8,    baseLiftPoten,  sensorPotentiometer)
 #pragma config(Sensor, dgtl1,  rightQuad,      sensorQuadEncoder)
@@ -8,7 +8,7 @@
 #pragma config(Sensor, dgtl7,  sideToggle,     sensorDigitalIn)
 #pragma config(Sensor, dgtl8,  minorZoneToggle, sensorDigitalIn)
 #pragma config(Sensor, dgtl9,  majorZoneToggle, sensorDigitalIn)
-#pragma config(Sensor, dgtl11, leftQuad,       sensorQuadEncoder)
+#pragma config(Sensor, dgtl10, leftQuad,       sensorQuadEncoder)
 #pragma config(Motor,  port2,           rollers,       tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port3,           driveLeftFront, tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port4,           driveLeftBack, tmotorVex393_MC29, openLoop)
@@ -28,6 +28,7 @@
 
 #include "Vex_Competition_Includes.c"
 #include "\InTheZoneLibrary.c"
+#include "\motionPlanner.c"
 
 //for auton task
 string aMajorSide;
@@ -128,11 +129,48 @@ void pre_auton()
 
 }
 
-void runBasicCompAutonFake(int minorSide, int zone)
+void runBasicCompAutonFake()
 {
-	//driveStraight(1375,127);
-	turnToPos(-900);
-	//driveStraight(-800,127);
+	SensorValue[rightQuad] = 0;
+	SensorValue[leftQuad] = 0;
+
+	createMotionProfile(port3); //front left
+	createMotionProfile(port6); //front right
+
+	profileSetSensor(port3,dgtl10);
+	profileSetSensor(port6,dgtl1);
+
+	profileSetMaxVelocity(port3,500);
+	profileSetMaxVelocity(port6,500);
+
+	profileSetAccelerationGain(port3,0.07);
+	profileSetAccelerationGain(port6,0.07);
+
+	profileSetJerkRatio(port3,0.75);
+	profileSetJerkRatio(port6,0.75);
+
+	profileSetMaster(port4,port3,false);
+	profileSetMaster(port5,port6,false);
+
+	profileSetAccelerationTime(port3,750);
+	profileSetAccelerationTime(port6,750);
+
+	profileGoTo(port3,1500);
+	profileGoTo(port6,1500);
+
+	while(SensorValue[rightQuad]<1470 && SensorValue[leftQuad]<1470)
+	{wait1Msec(50);}
+
+	//profileGoTo(port3,0);
+	//profileGoTo(port6,0);
+	//SensorValue[leftQuad]=0;
+	//SensorValue[rightQuad]=0;
+
+	//writeDebugStreamLine("done with profileGoTo");
+
+	//profileGoTo(port3,1000);
+	//profileGoTo(port6,1000);
+
 }
 
 void runBasicCompAuton(int minorSide, int zone)
@@ -517,16 +555,13 @@ task usercontrol()
 	while(true)
 	{
 
-		/*
+
 		if(vexRT[Btn7L]==1)
 		{
-		runBasicCompAuton(1,20);
-		//driveStraight(600);
-		//turnToPos(500);
-		//setForkliftPos(FORKLIFT_UP);
-		//writeDebugStreamLine("Running basic comp auton");
+			runBasicCompAutonFake()
+			wait1Msec(7000);
 		}
-		*/
+
 		//if(vexRT[Btn7R]==1)
 		//{
 		//	string side = "blue";
