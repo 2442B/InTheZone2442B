@@ -31,10 +31,10 @@ enum PotenValuesTop {BACK_TOP = 1200, UPRIGHT_TOP = 2008, MATCHLOAD_TOP = 580, S
 enum PotenValuesClaw {BACK_CLAW = 3700, MATCHLOAD_CLAW = 750};
 enum PotenValuesBase {BACK_BASE = 1080, MATCHLOAD_BASE = 700, HIGHEST_BASE =  0}; //values increase as lift moves down
 int basicTopPositions[2] = {1550, 3440};
-int basicTopKp[2] = {0.3,0.3};
-int topLiftPositions[12] = {3700,2600,2775,2600,2600,2600,2600,2600,2600,2600,2600,2600};
-int baseLiftPositions[12] = {3600,3550,3400,3300,3100,3000,2900,3400,3300,3250,2695,2525};
-int secondBaseLiftPositions[12] = {0,3450,3400,3300,3100,3000,2900,3400,3300,3250,2695,2525};
+//int basicTopKp[2] = {0.3,0.3};
+//int topLiftPositions[12] = {3700,2600,2775,2600,2600,2600,2600,2600,2600,2600,2600,2600};
+//int baseLiftPositions[12] = {3600,3550,3400,3300,3100,3000,2900,3400,3300,3250,2695,2525};
+//int secondBaseLiftPositions[12] = {0,3450,3400,3300,3100,3000,2900,3400,3300,3250,2695,2525};
 
 /*base
 back = 3980
@@ -138,6 +138,52 @@ void basicSlewControlDrive(int power)
 		wait1Msec(40);
 	}
 	writeDebugStreamLine("slew finished");
+}
+
+void setupMotorProfiles()
+{
+	SensorValue[rightQuad] = 0;
+	SensorValue[leftQuad] = 0;
+
+	createMotionProfile(port3); //front left
+	createMotionProfile(port6); //front right
+
+	profileSetSensor(port3,dgtl10);
+	profileSetSensor(port6,dgtl1);
+
+	profileSetMaxVelocity(port3,570);
+	profileSetMaxVelocity(port6,570);
+
+	profileSetAccelerationGain(port3,0.04);
+	profileSetAccelerationGain(port6,0.04);
+
+	profileSetJerkRatio(port3,0.6);
+	profileSetJerkRatio(port6,0.6);
+
+	profileSetMaster(port4,port3,false);
+	profileSetMaster(port5,port6,false);
+
+	profileSetAccelerationTime(port3,750);
+	profileSetAccelerationTime(port6,750);
+}
+
+void driveRightDistance(int distance)
+{
+	profileGoTo(port6,distance);
+	while(SensorValue[rightQuad]<distance - (sgn(SensorValue[rightQuad])*50)){wait1Msec(50);}
+}
+
+void driveLeftDistance(int distance)
+{
+	profileGoTo(port3,distance);
+	while(SensorValue[leftQuad]<distance - (sgn(SensorValue[leftQuad])*50)){wait1Msec(50);}
+}
+
+void driveStraightDistance(int distance)
+{
+	profileGoTo(port6,distance);
+	profileGoTo(port3,distance);
+	while(SensorValue[leftQuad]<distance - (sgn(SensorValue[leftQuad])*50)){wait1Msec(50);}
 }
 
 /////////TASKS/////////
@@ -447,7 +493,7 @@ void setClawUntilPos(int aDesiredClaw, int aClawPower)
 	clawPower = aClawPower;
 	startTask(setClawUntilPosTask);
 }
-
+/*
 /////MORE COMPLEX TASKS - AUTOSTACKING///
 task autoScoreTask()
 {
@@ -508,3 +554,4 @@ void autoStack()
 {
 	startTask(autoStackTask);
 }
+*/
