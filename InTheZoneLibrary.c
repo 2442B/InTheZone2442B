@@ -151,11 +151,11 @@ void setupMotorProfiles()
 	profileSetSensor(port3,dgtl10);
 	profileSetSensor(port6,dgtl1);
 
-	profileSetMaxVelocity(port3,570);
-	profileSetMaxVelocity(port6,570);
+	profileSetMaxVelocity(port3,550);
+	profileSetMaxVelocity(port6,550);
 
-	profileSetAccelerationGain(port3,0.04);
-	profileSetAccelerationGain(port6,0.04);
+	profileSetAccelerationGain(port3,0.02);
+	profileSetAccelerationGain(port6,0.02);
 
 	profileSetJerkRatio(port3,0.6);
 	profileSetJerkRatio(port6,0.6);
@@ -163,8 +163,8 @@ void setupMotorProfiles()
 	profileSetMaster(port4,port3,false);
 	profileSetMaster(port5,port6,false);
 
-	profileSetAccelerationTime(port3,750);
-	profileSetAccelerationTime(port6,750);
+	profileSetAccelerationTime(port3,1000);
+	profileSetAccelerationTime(port6,1000);
 }
 
 void driveRightDistance(int distance)
