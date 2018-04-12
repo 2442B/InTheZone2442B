@@ -151,20 +151,20 @@ void setupMotorProfiles()
 	profileSetSensor(port3,dgtl10);
 	profileSetSensor(port6,dgtl1);
 
-	profileSetMaxVelocity(port3,550);
-	profileSetMaxVelocity(port6,550);
+	profileSetMaxVelocity(port3,520);
+	profileSetMaxVelocity(port6,520);
 
-	profileSetAccelerationGain(port3,0.02);
-	profileSetAccelerationGain(port6,0.02);
+	profileSetAccelerationGain(port3,0.01);
+	profileSetAccelerationGain(port6,0.01);
 
-	profileSetJerkRatio(port3,0.6);
-	profileSetJerkRatio(port6,0.6);
+	profileSetJerkRatio(port3,0.5);
+	profileSetJerkRatio(port6,0.5);
 
 	profileSetMaster(port4,port3,false);
 	profileSetMaster(port5,port6,false);
 
-	profileSetAccelerationTime(port3,1000);
-	profileSetAccelerationTime(port6,1000);
+	profileSetAccelerationTime(port3,600);
+	profileSetAccelerationTime(port6,600);
 }
 
 void driveRightDistance(int distance)
@@ -179,7 +179,7 @@ void driveLeftDistance(int distance)
 	while(SensorValue[leftQuad]<distance - (sgn(SensorValue[leftQuad])*50)){wait1Msec(50);}
 }
 
-void driveStraightDistance(int distance)
+void driveStraightDistance(int distance) //NEED TO MAKE THIS WORK WITH NEGATIVES
 {
 	profileGoTo(port6,distance);
 	profileGoTo(port3,distance);
@@ -359,7 +359,7 @@ task setForkliftPosTask()
 }
 
 ///////COMPLEX METHODS: a+bi///////
-void setForkliftPos(int aForkPos, int aForkliftTime = 1800)
+void setForkliftPos(int aForkPos, int aForkliftTime = 1700)
 {
 	forkliftPos = aForkPos;
 	forkliftTime = aForkliftTime;

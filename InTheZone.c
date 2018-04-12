@@ -46,11 +46,11 @@ void pre_auton()
 	displayLCDCenteredString(0,"Initializing");
 	displayLCDCenteredString(1,"Gyro");
 	writeDebugStreamLine("begin gyro init");
-	SensorType[in4] = sensorNone;
+	SensorType[in3] = sensorNone;
 	wait1Msec(1000);
-	SensorType[in4] = sensorGyro;
+	SensorType[in3] = sensorGyro;
 	wait1Msec(2000);
-	SensorScale[in4] = 133;
+	SensorScale[in3] = 133;
 	writeDebugStreamLine("finished gyro init %d", SensorScale[in4]);
 
 	string mainBattery;
@@ -145,6 +145,8 @@ void runBasicCompAutonFake()
 
 void runBasicCompAuton(int minorSide, int zone)
 {
+	setupMotorProfiles();
+
 	//minorSide: 1 = left, -1 = right, majorSide parameter not used yet
 	clearTimer(T1);
 	reachedMobileGoal = false; //will act as hard stop for lifting cone â?? when reachedMobileGoal is true, the lift will immediately drop
@@ -152,9 +154,9 @@ void runBasicCompAuton(int minorSide, int zone)
 	//Go to mobile goal â Drop mobile base lift, lift cone, and drive straight
 	motor[rollers] = -20;
 	setBaseLiftPos(550, 10, -15);
-	setForkliftPower(-80);
-	driveStraightDistance(2000); //drive to mobile goal
-	setForkliftPower(0);
+	setForkliftPos(FORKLIFT_DOWN);
+	driveStraightDistance(1700); //drive to mobile goal
+	stopTask(motionPlanner);
 
 	//pick up goal
 	reachedMobileGoal = true; //force cone lift to drop
@@ -200,7 +202,9 @@ void runBasicCompAuton(int minorSide, int zone)
 		}
 		*/
 		setBaseLiftPos(950, 10);
-		driveStraight(-1800,127);
+		setupMotorProfiles();
+		driveStraightDistance(-1800);
+		stopTask(motionPlanner);
 	}
 	else if(zone == 10)
 	{
@@ -226,7 +230,7 @@ void runBasicCompAuton(int minorSide, int zone)
 		basicSlewControlDrive(127);
 		wait1Msec(750);
 		setForkliftPos(FORKLIFT_DOWN);
-		wait1Msec(500);
+		wait1Msec(1000);
 		//driveStraight(220,127);
 	}
 	else if(zone == 10)
@@ -315,14 +319,15 @@ SensorValue[leftQuad] = 0;
 	{
 		if(vexRT[Btn7L]==1)
 		{
-			runBasicCompAutonFake()
-			wait1Msec(7000);
+			setupMotorProfiles();
+			driveStraightDistance(-1800);
+			stopTask(motionPlanner);
 		}
 
 		if(vexRT[Btn7R]==1)
 		{
 			int side = 1;
-			int zone = 10;
+			int zone = 20;
 			runBasicCompAuton(side,zone);
 		}
 
