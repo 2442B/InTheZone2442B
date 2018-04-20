@@ -149,9 +149,9 @@ void runBasicCompAuton(int minorSide, int zone)
 
 	//minorSide: 1 = left, -1 = right, majorSide parameter not used yet
 	clearTimer(T1);
-	reachedMobileGoal = false; //will act as hard stop for lifting cone â?? when reachedMobileGoal is true, the lift will immediately drop
+	reachedMobileGoal = false; //will act as hard stop for lifting cone ï¿½?? when reachedMobileGoal is true, the lift will immediately drop
 
-	//Go to mobile goal â Drop mobile base lift, lift cone, and drive straight
+	//Go to mobile goal ï¿½ Drop mobile base lift, lift cone, and drive straight
 	motor[rollers] = -20;
 	setBaseLiftPos(550, 10, -15);
 	setForkliftPos(FORKLIFT_DOWN);
@@ -203,7 +203,7 @@ void runBasicCompAuton(int minorSide, int zone)
 		*/
 		setBaseLiftPos(950, 10);
 		setupMotorProfiles();
-		driveStraightDistance(-1800);
+		driveStraightDistance(-1800); //untested value
 		stopTask(motionPlanner);
 	}
 	else if(zone == 10)
@@ -580,9 +580,9 @@ void runProgSkills()
 	clearTimer(T1);
 	//run auton to score in 20Z
 	string blank = "";
-	reachedMobileGoal = false; //will act as hard stop for lifting cone â?? when reachedMobileGoal is true, the lift will immediately drop
+	reachedMobileGoal = false; //will act as hard stop for lifting cone ï¿½?? when reachedMobileGoal is true, the lift will immediately drop
 
-	//Go to mobile goal â Drop mobile base lift, lift cone, and drive straight
+	//Go to mobile goal ï¿½ Drop mobile base lift, lift cone, and drive straight
 	setBaseLiftPos(550, 10, -15);
 	setForkliftPower(-90);
 	//basicSlewControlDrive(127);
