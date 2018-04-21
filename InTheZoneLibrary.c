@@ -91,7 +91,6 @@ void setLeftMotors(int power)
 	motor[driveLeftBack] = power;
 	motor[driveLeftFront] = power;
 }
-
 void setRightMotors(int power)
 {
 	motor[driveRightBack] = power;
@@ -151,20 +150,20 @@ void setupMotorProfiles()
 	profileSetSensor(port3,dgtl10);
 	profileSetSensor(port6,dgtl1);
 
-	profileSetMaxVelocity(port3,520);
-	profileSetMaxVelocity(port6,520);
+	profileSetMaxVelocity(port3,500);
+	profileSetMaxVelocity(port6,500);
 
 	profileSetAccelerationGain(port3,0.01);
 	profileSetAccelerationGain(port6,0.01);
 
-	profileSetJerkRatio(port3,0.5);
-	profileSetJerkRatio(port6,0.5);
+	profileSetJerkRatio(port3,0.6);
+	profileSetJerkRatio(port6,0.6);
 
 	profileSetMaster(port4,port3,false);
 	profileSetMaster(port5,port6,false);
 
-	profileSetAccelerationTime(port3,600);
-	profileSetAccelerationTime(port6,600);
+	profileSetAccelerationTime(port3,1000);
+	profileSetAccelerationTime(port6,1000);
 }
 
 void driveRightDistance(int distance)
@@ -183,7 +182,7 @@ void driveStraightDistance(int distance) //untested, changed to work with negati
 {
 	profileGoTo(port6,distance);
 	profileGoTo(port3,distance);
-	while(sgn(distange) * SensorValue[leftQuad] < sgn(distance)*(distance) - 50){wait1Msec(50);}
+	while(sgn(distance) * SensorValue[leftQuad] < sgn(distance)*(distance) - 50){wait1Msec(50);}
 }
 
 /////////TASKS/////////
@@ -359,7 +358,7 @@ task setForkliftPosTask()
 }
 
 ///////COMPLEX METHODS: a+bi///////
-void setForkliftPos(int aForkPos, int aForkliftTime = 1700)
+void setForkliftPos(int aForkPos, int aForkliftTime = 2000)
 {
 	forkliftPos = aForkPos;
 	forkliftTime = aForkliftTime;
@@ -400,7 +399,7 @@ void driveStraight(int dest, int basePower = 127, float leftMultiplier = 0.9, in
 	setAllDriveMotors(0);
 }
 
-void turnToPos(int pos,bool withMobileGoal=true,int timeLimit = 2500)
+void turnToPos(int pos,bool withMobileGoal=true,int timeLimit = 2500, int turnForHighZone=false)
 {
 	clearTimer(T4);
 	int err = pos - SensorValue[gyro];
@@ -410,13 +409,19 @@ void turnToPos(int pos,bool withMobileGoal=true,int timeLimit = 2500)
 	int intTerm;
 	int oldErrTerm = 0;
 	int totalErrTerm = 0;
-	while(fabs(err) > 10 && time1(T4)<timeLimit)
+	while(fabs(err) > 30 && time1(T4)<timeLimit)
 	{
 		err = pos - SensorValue[gyro];
 		if(!withMobileGoal)
 		{
 			errTerm = err*.5;
 			derivTerm = (err - oldErrTerm)*1.3;
+			intTerm = 0;//totalErrTerm*0.004;
+		}
+		else if(turnForHighZone)
+		{
+			errTerm = err*1.3;
+			derivTerm = (err - oldErrTerm)*1;
 			intTerm = 0;//totalErrTerm*0.004;
 		}
 		else
@@ -429,8 +434,8 @@ void turnToPos(int pos,bool withMobileGoal=true,int timeLimit = 2500)
 
 		power = errTerm+derivTerm+intTerm;
 
-		setRightMotors(power);
-		setLeftMotors(-power);
+		profileSetMotorOutput(port6,power); //set right motors
+		profileSetMotorOutput(port3,-power); //set left motors
 		//writeDebugStreamLine("Turning, Err: %d, power: %d", err, power);
 
 		oldErrTerm = err;

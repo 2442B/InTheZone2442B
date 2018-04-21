@@ -132,9 +132,18 @@ void pre_auton()
 void runBasicCompAutonFake()
 {
 	setupMotorProfiles();
-
-	profileGoTo(port3,1700);
-	profileGoTo(port6,1700);
+	driveStraightDistance(600);
+	profileSetMotorOutput (port3, -50);
+	profileSetMotorOutput (port6, -50);
+	wait1Msec(2000);
+	//	SensorValue[rightQuad] = 0;
+	//SensorValue[leftQuad] = 0;
+	////setupMotorProfiles();
+	//driveStraightDistance(-300);
+	//stopTask(motionPlanner);
+	//untested value
+	//stopTask(motionPlanner);
+	//writeDebugStreamLine("after moving");
 
 	//writeDebugStreamLine("done with profileGoTo");
 
@@ -155,13 +164,14 @@ void runBasicCompAuton(int minorSide, int zone)
 	motor[rollers] = -20;
 	setBaseLiftPos(550, 10, -15);
 	setForkliftPos(FORKLIFT_DOWN);
-	driveStraightDistance(1700); //drive to mobile goal
-	stopTask(motionPlanner);
+	driveStraightDistance(1500); //drive to mobile goal
+	profileSetMotorOutput(port3, 0);
+	profileSetMotorOutput(port6, 0);
 
 	//pick up goal
 	reachedMobileGoal = true; //force cone lift to drop
 	setForkliftPos(FORKLIFT_UP);
-	wait1Msec(1200);
+	wait1Msec(1400);
 	setBaseLiftPos(800, 10);
 	turnToPos(70, true, 500);
 	setClawPower(127);
@@ -169,7 +179,7 @@ void runBasicCompAuton(int minorSide, int zone)
 	wait1Msec(500);
 	setForkliftPower(0);
 	setClawPower(0);
-
+	writeDebugStreamLine("before entering zone code");
 	//pick up second cone
 	/*
 	setClawPower(-80);
@@ -186,25 +196,18 @@ void runBasicCompAuton(int minorSide, int zone)
 	*/
 	if(zone==20)
 	{
-		turnToPos(110*minorSide, true, 700);
-		/*
-		if(SensorValue[gyro]>110*minorSide)
-		{
-		setLeftMotors(30);
-		setRightMotors(-30);
-		while(SensorValue[gyro]>minorSide*115){wait1Msec(20);}
-		}
-		else if(SensorValue[gyro]<105*minorSide)
-		{
-		setLeftMotors(-30);
-		setRightMotors(30);
-		while(SensorValue[gyro]<110*minorSide){wait1Msec(20);}
-		}
-		*/
+		SensorValue[rightQuad] = 0;
+		SensorValue[leftQuad] = 0;
+		turnToPos(110*minorSide, true, 600, true);
 		setBaseLiftPos(950, 10);
-		setupMotorProfiles();
-		driveStraightDistance(-1800); //untested value
-		stopTask(motionPlanner);
+		//profileSetMotorOutput(port3, 0);
+		//profileSetMotorOutput(port6, 0);
+		//wait1Msec(120);
+		profileSetMaxVelocity(port3,580);
+		profileSetMaxVelocity(port6,580)
+		profileSetAccelerationTime(port3,100);
+		profileSetAccelerationTime(port6,100);
+		driveStraightDistance(-1950);
 	}
 	else if(zone == 10)
 	{
@@ -227,10 +230,11 @@ void runBasicCompAuton(int minorSide, int zone)
 	if(zone == 20)
 	{
 		turnToPos(1337*minorSide);
-		basicSlewControlDrive(127);
+		profileSetMotorOutput(port3,127);
+		profileSetMotorOutput(port6,127);
 		wait1Msec(750);
 		setForkliftPos(FORKLIFT_DOWN);
-		wait1Msec(1000);
+		wait1Msec(700);
 		//driveStraight(220,127);
 	}
 	else if(zone == 10)
@@ -267,7 +271,9 @@ void runBasicCompAuton(int minorSide, int zone)
 
 	setClawPower(0);
 	wait1Msec(200);
-	driveStraight(-500,127,1);
+	profileSetMotorOutput(port3,-127);
+	profileSetMotorOutput(port6,-127);
+	wait1Msec(1000);
 	writeDebugStreamLine("Time: %d", time1(T1));
 }
 
@@ -313,20 +319,18 @@ task usercontrol()
 	bool topLiftPressed = false;
 	int topLiftTargetLoc = 0; // 2 = up; 1 = flat; 0 = down
 
-SensorValue[rightQuad]=0;
-SensorValue[leftQuad] = 0;
+	SensorValue[rightQuad]=0;
+	SensorValue[leftQuad] = 0;
 	while(true)
 	{
 		if(vexRT[Btn7L]==1)
 		{
-			setupMotorProfiles();
-			driveStraightDistance(-1800);
-			stopTask(motionPlanner);
+			runBasicCompAutonFake();
 		}
 
 		if(vexRT[Btn7R]==1)
 		{
-			int side = 1;
+			int side = -1;
 			int zone = 20;
 			runBasicCompAuton(side,zone);
 		}
@@ -577,213 +581,213 @@ SensorValue[leftQuad] = 0;
 //PROGRAMMING SKILLS
 void runProgSkills()
 {
-	clearTimer(T1);
-	//run auton to score in 20Z
-	string blank = "";
-	reachedMobileGoal = false; //will act as hard stop for lifting cone �?? when reachedMobileGoal is true, the lift will immediately drop
+clearTimer(T1);
+//run auton to score in 20Z
+string blank = "";
+reachedMobileGoal = false; //will act as hard stop for lifting cone �?? when reachedMobileGoal is true, the lift will immediately drop
 
-	//Go to mobile goal � Drop mobile base lift, lift cone, and drive straight
-	setBaseLiftPos(550, 10, -15);
-	setForkliftPower(-90);
-	//basicSlewControlDrive(127);
-	driveStraight(1450,90); //drive to mobile goal
-	setForkliftPower(0);
+//Go to mobile goal � Drop mobile base lift, lift cone, and drive straight
+setBaseLiftPos(550, 10, -15);
+setForkliftPower(-90);
+//basicSlewControlDrive(127);
+driveStraight(1450,90); //drive to mobile goal
+setForkliftPower(0);
 
-	//pick up goal
-	reachedMobileGoal = true; //force cone lift to drop
-	setForkliftPos(FORKLIFT_UP);
-	wait1Msec(1500);
-	turnToPos(-100, true, 2000);
-	wait1Msec(200);
-	setBaseLiftPos(800, 10);
-	setForkliftPower(0);
+//pick up goal
+reachedMobileGoal = true; //force cone lift to drop
+setForkliftPos(FORKLIFT_UP);
+wait1Msec(1500);
+turnToPos(-100, true, 2000);
+wait1Msec(200);
+setBaseLiftPos(800, 10);
+setForkliftPower(0);
 
-	basicSlewControlDrive(-127);
-	driveStraight(-1975, 90); //Back up
-	turnToPos(-1350, true, 2500);
-	if(SensorValue[gyro]>-1350)
-	{
-		setLeftMotors(30);
-		setRightMotors(-30);
-		while(SensorValue[gyro]>-1340){wait1Msec(20);}
-		setAllDriveMotors(0);
-	}
-
-	setClawPower(127); //Drop cone
-	wait1Msec(500);
-	//setBaseLiftPos(500, 10); //Raise baseLift
-	setClawPower(0);
-
-	//score into 20
-	basicSlewControlDrive(127);
-	wait1Msec(750);
-	setForkliftPos(FORKLIFT_DOWN);
-	wait1Msec(500);
-
-	//back out
-	setBaseLiftPos(750, 10);
-	driveStraight(-500, 127);
-	setForkliftPos(FORKLIFT_UP);
-
-	//reset against bar
-	wait1Msec(500);
-	turnToPos(425,false,2000);
-	//basicSlewControlDrive(-127);
-	driveStraight(-10000,40,1,2000);//distance is arbitrarily large so that time is a limiting factor
-	wait1Msec(500);
-
-	//reset along wall for first time
-	SensorValue[gyro] = 0;
-	driveStraight(150,90);
-	setAllDriveMotors(0);
-	wait1Msec(200);
-	turnToPos(-800);
-	setLeftMotors(25);
-	while(SensorValue[gyro] > -890){wait1Msec(40);}
-	setLeftMotors(0);
-	wait1Msec(500);
-	setAllDriveMotors(-127);
-	wait1Msec(3000); //Back into wall
-
-	//move to second mogo
-	setAllDriveMotors(0);
-	setBaseLiftPower(-90);
-	while(SensorValue[baseLiftPoten]>300){wait1Msec(20);}
-	setBaseLiftPower(-10);
-	wait1Msec(100);
-	setForkliftPos(FORKLIFT_DOWN);
-	driveStraight(550,80);
-	turnToPos(0);
-	if(SensorValue[gyro]>15)
-	{
-		setLeftMotors(30);
-		setRightMotors(-30);
-		while(SensorValue[gyro]>5){wait1Msec(20);}
-	}
-	else if(SensorValue[gyro]<-15)
-	{
-		setLeftMotors(-30);
-		setRightMotors(30);
-		while(SensorValue[gyro]<-5){wait1Msec(20);}
-	}
-	setAllDriveMotors(0);
-	wait1Msec(200);
-	setForkliftPos(-60);
-	driveStraight(550,90);
-	setForkliftPos(FORKLIFT_UP);
-	wait1Msec(1500);
-
-	//Holding second mobile base
-	//turn and score
-	driveStraight(-350, 90);
-	wait1Msec(200);
-	turnToPos(-1675, true);
-	wait1Msec(200);
-	driveStraight(330,90);
-	setLeftMotors(30);
-	while(SensorValue[gyro]>-1750){wait1Msec(40);}
-	setAllDriveMotors(0);
-	wait1Msec(500);
-	setForkliftPos(FORKLIFT_DOWN);
-
-	wait1Msec(1200);
-	//back out of 2nd mogo
-	driveStraight(-200, 80);
-
-	//correct against bar after 2nd mogo
-	setForkliftPos(FORKLIFT_UP);
-	wait1Msec(1800);
-	turnToPos(0);
-	//basicSlewControlDrive(-80);
-	driveStraight(-10000,40,1,1700);
-
-	//turn and drive to 3rd mogo
-	SensorValue[gyro] = 0;
-	wait1Msec(500);
-	setRightMotors(30);
-	while(SensorValue[gyro]<20){wait1Msec(20);}
-	setAllDriveMotors(0);
-	wait1Msec(500);
-	setForkliftPower(-60);
-	driveStraight(2000,80);
-
-	//Holding 3rd mogo
-
-	//setForkliftPos(FORKLIFT_UP);
-
-	driveStraight(1350, 127); //previously 1150
-	driveStraight(-800, 127);
-	/*
-	turnToPos(-900);
-	if(SensorValue[gyro]<-900)
-	{
-		while(SensorValue[gyro]<-900)
-		{
-			setLeftMotors(-30);
-			setRightMotors(30);
-		}
-		setAllDriveMotors(0);
-	}
-	else
-	{
-		while(SensorValue[gyro]>-900)
-		{
-			setLeftMotors(30);
-			setRightMotors(-30);
-		}
-		setAllDriveMotors(0);
-	}
-	wait1Msec(100);
-	driveStraight(250, 90);
-	wait1Msec(100);
-
-	turnToPos(0);
-	wait1Msec(200);
-
-	basicSlewControlDrive(127)
-	wait1Msec(750);
-	setForkliftPos(FORKLIFT_DOWN);
-	wait1Msec(500);
-
-	driveStraight(-1000,127);
-
-	//--
-	writeDebugStreamLine("PROG SKILLS TIME: %f", time1(T1));
-
-	//	turnToPos(-425, false, 2500); //Around along white line
-	//	driveStraight(-10000, 127,1,1000); //Back up
-	//	SensorValue[gyro] = 0;
-	//turnToPos(900, false, 2500); //Turn perpendicular to bar
-
-	//CALIBRATE GYRO
-
-	/*
-
-	--Second Mobile Goal--
-
-	back
-	reset gyro -- Angles are now different
-	turn clockwise
-	forward
-	pick up
-	backwards
-	turn counterclockwise 180
-	mobile base down
-
-	--Third Mobile Goal--
-
-	back
-	clockwise 180*
-	forward
-	wait, then base lift up
-	base lift down
-	turn counterclockwise 135*
-	forward
-	base lift up
-	back
-	clockwise 45*
-	back clockwise 90*
-	forward
-	mobile base down
+basicSlewControlDrive(-127);
+driveStraight(-1975, 90); //Back up
+turnToPos(-1350, true, 2500);
+if(SensorValue[gyro]>-1350)
+{
+setLeftMotors(30);
+setRightMotors(-30);
+while(SensorValue[gyro]>-1340){wait1Msec(20);}
+setAllDriveMotors(0);
 }
-	*/
+
+setClawPower(127); //Drop cone
+wait1Msec(500);
+//setBaseLiftPos(500, 10); //Raise baseLift
+setClawPower(0);
+
+//score into 20
+basicSlewControlDrive(127);
+wait1Msec(750);
+setForkliftPos(FORKLIFT_DOWN);
+wait1Msec(500);
+
+//back out
+setBaseLiftPos(750, 10);
+driveStraight(-500, 127);
+setForkliftPos(FORKLIFT_UP);
+
+//reset against bar
+wait1Msec(500);
+turnToPos(425,false,2000);
+//basicSlewControlDrive(-127);
+driveStraight(-10000,40,1,2000);//distance is arbitrarily large so that time is a limiting factor
+wait1Msec(500);
+
+//reset along wall for first time
+SensorValue[gyro] = 0;
+driveStraight(150,90);
+setAllDriveMotors(0);
+wait1Msec(200);
+turnToPos(-800);
+setLeftMotors(25);
+while(SensorValue[gyro] > -890){wait1Msec(40);}
+setLeftMotors(0);
+wait1Msec(500);
+setAllDriveMotors(-127);
+wait1Msec(3000); //Back into wall
+
+//move to second mogo
+setAllDriveMotors(0);
+setBaseLiftPower(-90);
+while(SensorValue[baseLiftPoten]>300){wait1Msec(20);}
+setBaseLiftPower(-10);
+wait1Msec(100);
+setForkliftPos(FORKLIFT_DOWN);
+driveStraight(550,80);
+turnToPos(0);
+if(SensorValue[gyro]>15)
+{
+setLeftMotors(30);
+setRightMotors(-30);
+while(SensorValue[gyro]>5){wait1Msec(20);}
+}
+else if(SensorValue[gyro]<-15)
+{
+setLeftMotors(-30);
+setRightMotors(30);
+while(SensorValue[gyro]<-5){wait1Msec(20);}
+}
+setAllDriveMotors(0);
+wait1Msec(200);
+setForkliftPos(-60);
+driveStraight(550,90);
+setForkliftPos(FORKLIFT_UP);
+wait1Msec(1500);
+
+//Holding second mobile base
+//turn and score
+driveStraight(-350, 90);
+wait1Msec(200);
+turnToPos(-1675, true);
+wait1Msec(200);
+driveStraight(330,90);
+setLeftMotors(30);
+while(SensorValue[gyro]>-1750){wait1Msec(40);}
+setAllDriveMotors(0);
+wait1Msec(500);
+setForkliftPos(FORKLIFT_DOWN);
+
+wait1Msec(1200);
+//back out of 2nd mogo
+driveStraight(-200, 80);
+
+//correct against bar after 2nd mogo
+setForkliftPos(FORKLIFT_UP);
+wait1Msec(1800);
+turnToPos(0);
+//basicSlewControlDrive(-80);
+driveStraight(-10000,40,1,1700);
+
+//turn and drive to 3rd mogo
+SensorValue[gyro] = 0;
+wait1Msec(500);
+setRightMotors(30);
+while(SensorValue[gyro]<20){wait1Msec(20);}
+setAllDriveMotors(0);
+wait1Msec(500);
+setForkliftPower(-60);
+driveStraight(2000,80);
+
+//Holding 3rd mogo
+
+//setForkliftPos(FORKLIFT_UP);
+
+driveStraight(1350, 127); //previously 1150
+driveStraight(-800, 127);
+/*
+turnToPos(-900);
+if(SensorValue[gyro]<-900)
+{
+while(SensorValue[gyro]<-900)
+{
+setLeftMotors(-30);
+setRightMotors(30);
+}
+setAllDriveMotors(0);
+}
+else
+{
+while(SensorValue[gyro]>-900)
+{
+setLeftMotors(30);
+setRightMotors(-30);
+}
+setAllDriveMotors(0);
+}
+wait1Msec(100);
+driveStraight(250, 90);
+wait1Msec(100);
+
+turnToPos(0);
+wait1Msec(200);
+
+basicSlewControlDrive(127)
+wait1Msec(750);
+setForkliftPos(FORKLIFT_DOWN);
+wait1Msec(500);
+
+driveStraight(-1000,127);
+
+//--
+writeDebugStreamLine("PROG SKILLS TIME: %f", time1(T1));
+
+//	turnToPos(-425, false, 2500); //Around along white line
+//	driveStraight(-10000, 127,1,1000); //Back up
+//	SensorValue[gyro] = 0;
+//turnToPos(900, false, 2500); //Turn perpendicular to bar
+
+//CALIBRATE GYRO
+
+/*
+
+--Second Mobile Goal--
+
+back
+reset gyro -- Angles are now different
+turn clockwise
+forward
+pick up
+backwards
+turn counterclockwise 180
+mobile base down
+
+--Third Mobile Goal--
+
+back
+clockwise 180*
+forward
+wait, then base lift up
+base lift down
+turn counterclockwise 135*
+forward
+base lift up
+back
+clockwise 45*
+back clockwise 90*
+forward
+mobile base down
+}
+*/
