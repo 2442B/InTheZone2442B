@@ -178,11 +178,12 @@ void driveLeftDistance(int distance)
 	while(SensorValue[leftQuad]<distance - (sgn(SensorValue[leftQuad])*50)){wait1Msec(50);}
 }
 
-void driveStraightDistance(int distance) //untested, changed to work with negative distances
+void driveStraightDistance(int distance, int maxTime = 1000000) //maxTime set to an arbitrarily large value
 {
+	clearTimer(T1);
 	profileGoTo(port6,distance);
 	profileGoTo(port3,distance);
-	while(sgn(distance) * SensorValue[leftQuad] < sgn(distance)*(distance) - 50){wait1Msec(50);}
+	while((sgn(distance) * SensorValue[leftQuad] < sgn(distance)*(distance) - 50) && time1(T1)<maxTime){wait1Msec(50);}
 }
 
 /////////TASKS/////////

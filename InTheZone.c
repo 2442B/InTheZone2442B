@@ -164,7 +164,7 @@ void runBasicCompAuton(int minorSide, int zone)
 	motor[rollers] = -20;
 	setBaseLiftPos(550, 10, -15);
 	setForkliftPos(FORKLIFT_DOWN);
-	driveStraightDistance(1500); //drive to mobile goal
+	driveStraightDistance(1500,4000); //drive to mobile goal
 	profileSetMotorOutput(port3, 0);
 	profileSetMotorOutput(port6, 0);
 
@@ -198,7 +198,7 @@ void runBasicCompAuton(int minorSide, int zone)
 	{
 		SensorValue[rightQuad] = 0;
 		SensorValue[leftQuad] = 0;
-		turnToPos(110*minorSide, true, 600, true);
+		turnToPos(140*minorSide, true, 600, true);
 		setBaseLiftPos(950, 10);
 		//profileSetMotorOutput(port3, 0);
 		//profileSetMotorOutput(port6, 0);
@@ -212,15 +212,26 @@ void runBasicCompAuton(int minorSide, int zone)
 	else if(zone == 10)
 	{
 		//drive back
+		profileSetMotorOutput(port3, 0);
+		profileSetMotorOutput(port6, 0);
+		SensorValue[rightQuad] = 0;
+		SensorValue[leftQuad] = 0;
 		turnToPos(0);
+		wait1Msec(150);
 		setBaseLiftPos(950, 10);
-		driveStraight(-1200,127); //drive back -1000
+		driveStraightDistance(-1200);
+		//driveStraight(-1200,127); //drive back -1000
 	}
 	else
 	{
+		profileSetMotorOutput(port3, 0);
+		profileSetMotorOutput(port6, 0);
+		SensorValue[rightQuad] = 0;
+		SensorValue[leftQuad] = 0;
 		turnToPos(0);
+		wait1Msec(150);
 		setBaseLiftPos(950, 10);
-		driveStraight(-750,127); //drive back -1000
+		driveStraightDistance(-750); //drive back
 	}
 	setClawPower(127);
 	wait1Msec(500);
@@ -244,16 +255,17 @@ void runBasicCompAuton(int minorSide, int zone)
 
 		//swing turn
 		if(minorSide == 1){
-			setLeftMotors(127);
-			setRightMotors(0);
+			profileSetMotorOutput(port3,127); //setLeftMotors(127);
+			profileSetMotorOutput(port6,0); //setRightMotors(0);
 		}
 		else
 		{
-			setLeftMotors(0);
-			setRightMotors(127);
+			profileSetMotorOutput(port3,0); //setLeftMotors(0);
+			profileSetMotorOutput(port6,127); //setRightMotors(127);
 		}
 		while(fabs(SensorValue[gyro]) < 2200) {}
-		setAllDriveMotors(0);
+		profileSetMotorOutput(port3,0); //setAllDriveMotors(0);
+		profileSetMotorOutput(port6,0);
 		setForkliftPos(FORKLIFT_DOWN);
 		wait1Msec(1800);
 	}
@@ -262,10 +274,11 @@ void runBasicCompAuton(int minorSide, int zone)
 		//just turn around and drive straight
 		turnToPos(-1800*minorSide);
 		setClawPower(0);
-		setLeftMotors(127);
-		setRightMotors(0);
+		profileSetMotorOutput(port3,127); //setLeftMotors(127);
+		profileSetMotorOutput(port6,0); //setRightMotors(0);
 		while(SensorValue[gyro] < -2145 * minorSide) {}
-		setAllDriveMotors(0);
+		profileSetMotorOutput(port3,0); //setAllDriveMotors(0);
+		profileSetMotorOutput(port6,0);
 		setForkliftPos(FORKLIFT_DOWN);
 	}
 
