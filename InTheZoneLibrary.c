@@ -1,5 +1,5 @@
-#pragma config(Sensor, in2,    secondBattery,  sensorAnalog)
-#pragma config(Sensor, in3,    gyro,           sensorGyro)
+#pragma config(Sensor, in3,    secondBattery,  sensorAnalog)
+#pragma config(Sensor, in4,    gyro,           sensorGyro)
 #pragma config(Sensor, in7,    topLiftPoten,   sensorPotentiometer)
 #pragma config(Sensor, in8,    baseLiftPoten,  sensorPotentiometer)
 #pragma config(Sensor, dgtl1,  rightQuad,      sensorQuadEncoder)
@@ -8,7 +8,7 @@
 #pragma config(Sensor, dgtl7,  sideToggle,     sensorDigitalIn)
 #pragma config(Sensor, dgtl8,  minorZoneToggle, sensorDigitalIn)
 #pragma config(Sensor, dgtl9,  majorZoneToggle, sensorDigitalIn)
-#pragma config(Sensor, dgtl10, leftQuad,       sensorQuadEncoder)
+#pragma config(Sensor, dgtl11, leftQuad,       sensorQuadEncoder)
 #pragma config(Motor,  port2,           rollers,       tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port3,           driveLeftFront, tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port4,           driveLeftBack, tmotorVex393_MC29, openLoop)
@@ -27,14 +27,14 @@
 ////GLOBAL VARIABLES////
 //Poten Values For Lift -- Values increase as lift moves backwards
 enum ForkliftPos {FORKLIFT_UP=1,FORKLIFT_DOWN=-1};
-enum PotenValuesTop {BACK_TOP = 1200, UPRIGHT_TOP = 2008, MATCHLOAD_TOP = 580, SCORE_TOP = 3440, FLAT_TOP=1900};
+enum PotenValuesTop {BACK_TOP = 1200, UPRIGHT_TOP = 2008, MATCHLOAD_TOP = 580, SCORE_TOP = 3750, FLAT_TOP=1900};
 enum PotenValuesClaw {BACK_CLAW = 3700, MATCHLOAD_CLAW = 750};
 enum PotenValuesBase {BACK_BASE = 1080, MATCHLOAD_BASE = 700, HIGHEST_BASE =  0}; //values increase as lift moves down
-int basicTopPositions[2] = {1550, 3440};
-//int basicTopKp[2] = {0.3,0.3};
-//int topLiftPositions[12] = {3700,2600,2775,2600,2600,2600,2600,2600,2600,2600,2600,2600};
-//int baseLiftPositions[12] = {3600,3550,3400,3300,3100,3000,2900,3400,3300,3250,2695,2525};
-//int secondBaseLiftPositions[12] = {0,3450,3400,3300,3100,3000,2900,3400,3300,3250,2695,2525};
+int basicTopPositions[3] = {1270, 2000, 3810};
+int basicTopKp[3] = {0.3,0.3,0.3};
+int topLiftPositions[12] = {3700,2600,2775,2600,2600,2600,2600,2600,2600,2600,2600,2600};
+int baseLiftPositions[12] = {3600,3550,3400,3300,3100,3000,2900,3400,3300,3250,2695,2525};
+int secondBaseLiftPositions[12] = {0,3450,3400,3300,3100,3000,2900,3400,3300,3250,2695,2525};
 
 /*base
 back = 3980
@@ -91,6 +91,7 @@ void setLeftMotors(int power)
 	motor[driveLeftBack] = power;
 	motor[driveLeftFront] = power;
 }
+
 void setRightMotors(int power)
 {
 	motor[driveRightBack] = power;
@@ -139,53 +140,6 @@ void basicSlewControlDrive(int power)
 	writeDebugStreamLine("slew finished");
 }
 
-void setupMotorProfiles()
-{
-	SensorValue[rightQuad] = 0;
-	SensorValue[leftQuad] = 0;
-
-	createMotionProfile(port3); //front left
-	createMotionProfile(port6); //front right
-
-	profileSetSensor(port3,dgtl10);
-	profileSetSensor(port6,dgtl1);
-
-	profileSetMaxVelocity(port3,500);
-	profileSetMaxVelocity(port6,500);
-
-	profileSetAccelerationGain(port3,0.01);
-	profileSetAccelerationGain(port6,0.01);
-
-	profileSetJerkRatio(port3,0.6);
-	profileSetJerkRatio(port6,0.6);
-
-	profileSetMaster(port4,port3,false);
-	profileSetMaster(port5,port6,false);
-
-	profileSetAccelerationTime(port3,1000);
-	profileSetAccelerationTime(port6,1000);
-}
-
-void driveRightDistance(int distance)
-{
-	profileGoTo(port6,distance);
-	while(SensorValue[rightQuad]<distance - (sgn(SensorValue[rightQuad])*50)){wait1Msec(50);}
-}
-
-void driveLeftDistance(int distance)
-{
-	profileGoTo(port3,distance);
-	while(SensorValue[leftQuad]<distance - (sgn(SensorValue[leftQuad])*50)){wait1Msec(50);}
-}
-
-void driveStraightDistance(int distance, int maxTime = 1000000) //maxTime set to an arbitrarily large value
-{
-	clearTimer(T1);
-	profileGoTo(port6,distance);
-	profileGoTo(port3,distance);
-	while((sgn(distance) * SensorValue[leftQuad] < sgn(distance)*(distance) - 50) && time1(T1)<maxTime){wait1Msec(50);}
-}
-
 /////////TASKS/////////
 task correctStraight()
 {
@@ -202,9 +156,9 @@ task correctStraight()
 		err = theta - SensorValue[gyro];
 		deriv = (err-oldErr); //if error is increasing, apply more power (compensate for less momentum). else, apply less power
 		//if(fabs(err)<10)
-		//integral = 0
+			//integral = 0
 		//else
-		integral = totalErr * 0.1;
+			integral = totalErr * 0.1;
 		power = err*1.8 + deriv*1.0 + integral;
 		if(power>0)
 		{
@@ -260,24 +214,29 @@ task holdTopLiftPosTask()
 	{
 		err = desiredTop - SensorValue[topLiftPoten];
 		holdTopDeriv = err - holdTopPrevious;
+		//writeDebugStreamLine("4bar kp: %f"
+		if(desiredTop == basicTopPositions[1])
+		{
+			power = (int) (err*0.2 + holdTopDeriv*0.1 + holdTopTotal*0);
+		}
+		else{
 		power = (int) (err*0.4 + holdTopDeriv*0.1 + holdTopTotal*0); //USING KP INSTEAD OF MANUAL 0.3 DOES NOT WORK - NEED TO DEBUG
-		writeDebugStreamLine("4bar err: %f, power: %f", err, power);
-
-	//writeDebugStreamLine("Desired: %d, Poten: %d, Power: %d, Error: %d", desiredTop, SensorValue[topLiftPoten], power,err);
-
-	holdTopPrevious = err;
-	holdTopTotal += err;
-	wait1Msec(50);
-
-	if(fabs(power)>30)// && ((fabs(err)>20) || (desiredTop == basicTopPositions[1]) || !(desiredTop==basicTopPositions[0] && sensorValue[topLiftPoten]<basicTopPositions[0])))
-	{
-		setTopLiftPower(power);
 	}
-	else
-	{
-		setTopLiftPower(0);
+		//writeDebugStreamLine("Desired: %d, Poten: %d, Power: %d, Error: %d", desiredTop, SensorValue[topLiftPoten], power,err);
+
+		holdTopPrevious = err;
+		holdTopTotal += err;
+		wait1Msec(50);
+
+		if(fabs(power)>30 && ((fabs(err)>20) || (desiredTop == basicTopPositions[1]) || !(desiredTop==basicTopPositions[0] && sensorValue[topLiftPoten]<basicTopPositions[0])))
+		{
+			setTopLiftPower(power);
+		}
+		else
+		{
+			setTopLiftPower(0);
+		}
 	}
-}
 }
 
 task setBaseLiftPosTask()
@@ -353,13 +312,13 @@ task setClawUntilPosTask()
 task setForkliftPosTask()
 {
 	clearTimer(T4);
-	setForkliftPower(forkliftPos*100);
+	setForkliftPower(forkliftPos*80);
 	while((SensorValue(forkliftButton) == 1 || forkliftPos==FORKLIFT_DOWN) && time1(T4)<forkliftTime){wait1Msec(20);}
 	setForkliftPower(0);
 }
 
 ///////COMPLEX METHODS: a+bi///////
-void setForkliftPos(int aForkPos, int aForkliftTime = 3000)
+void setForkliftPos(int aForkPos, int aForkliftTime = 1800)
 {
 	forkliftPos = aForkPos;
 	forkliftTime = aForkliftTime;
@@ -400,7 +359,7 @@ void driveStraight(int dest, int basePower = 127, float leftMultiplier = 0.9, in
 	setAllDriveMotors(0);
 }
 
-void turnToPos(int pos,bool withMobileGoal=true,int timeLimit = 2500, int turnForHighZone=false)
+void turnToPos(int pos,bool withMobileGoal=true,int timeLimit = 2500)
 {
 	clearTimer(T4);
 	int err = pos - SensorValue[gyro];
@@ -410,19 +369,13 @@ void turnToPos(int pos,bool withMobileGoal=true,int timeLimit = 2500, int turnFo
 	int intTerm;
 	int oldErrTerm = 0;
 	int totalErrTerm = 0;
-	while(fabs(err) > 30 && time1(T4)<timeLimit)
+	while(fabs(err) > 10 && time1(T4)<timeLimit)
 	{
 		err = pos - SensorValue[gyro];
 		if(!withMobileGoal)
 		{
 			errTerm = err*.5;
 			derivTerm = (err - oldErrTerm)*1.3;
-			intTerm = 0;//totalErrTerm*0.004;
-		}
-		else if(turnForHighZone)
-		{
-			errTerm = err*1.3;
-			derivTerm = (err - oldErrTerm)*1;
 			intTerm = 0;//totalErrTerm*0.004;
 		}
 		else
@@ -435,8 +388,8 @@ void turnToPos(int pos,bool withMobileGoal=true,int timeLimit = 2500, int turnFo
 
 		power = errTerm+derivTerm+intTerm;
 
-		profileSetMotorOutput(port6,power); //set right motors
-		profileSetMotorOutput(port3,-power); //set left motors
+		setRightMotors(power);
+		setLeftMotors(-power);
 		//writeDebugStreamLine("Turning, Err: %d, power: %d", err, power);
 
 		oldErrTerm = err;
@@ -499,7 +452,7 @@ void setClawUntilPos(int aDesiredClaw, int aClawPower)
 	clawPower = aClawPower;
 	startTask(setClawUntilPosTask);
 }
-/*
+
 /////MORE COMPLEX TASKS - AUTOSTACKING///
 task autoScoreTask()
 {
@@ -560,4 +513,3 @@ void autoStack()
 {
 	startTask(autoStackTask);
 }
-*/
