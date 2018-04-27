@@ -353,13 +353,13 @@ task setClawUntilPosTask()
 task setForkliftPosTask()
 {
 	clearTimer(T4);
-	setForkliftPower(forkliftPos*80);
+	setForkliftPower(forkliftPos*100);
 	while((SensorValue(forkliftButton) == 1 || forkliftPos==FORKLIFT_DOWN) && time1(T4)<forkliftTime){wait1Msec(20);}
 	setForkliftPower(0);
 }
 
 ///////COMPLEX METHODS: a+bi///////
-void setForkliftPos(int aForkPos, int aForkliftTime = 2000)
+void setForkliftPos(int aForkPos, int aForkliftTime = 3000)
 {
 	forkliftPos = aForkPos;
 	forkliftTime = aForkliftTime;
